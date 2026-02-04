@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Button } from '../../shared/ui/button';
+import { Badge } from '../../shared/ui/badge';
 import { ArrowLeft, MapPin, Clock, CheckCircle, Navigation, Wifi, AlertCircle, ShoppingCart, UserX } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
@@ -16,7 +16,7 @@ interface CheckInRecord {
   hadSale?: boolean;
 }
 
-import { CheckInStatus } from '../domain/deliveries/models';
+import { CheckInStatus } from '../../domain/deliveries/models';
 
 interface CheckInScreenProps {
   delivery?: any;

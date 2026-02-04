@@ -1,4 +1,4 @@
-import { Button } from './ui/button';
+import { Button } from '../../shared/ui/button';
 import { Home, Users, ShoppingCart, Route } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 

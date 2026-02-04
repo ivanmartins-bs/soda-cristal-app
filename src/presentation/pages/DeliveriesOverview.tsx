@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 
-import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Badge } from '../../shared/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Clock, CheckCircle, MapPin, Droplets, Phone, Calendar, DollarSign, UserX, AlertCircle } from 'lucide-react';
 
-import { Delivery, DeliveryStatusData } from '../domain/deliveries/models';
+import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
 
 interface DeliveriesOverviewProps {
   deliveryStatuses: Record<string, DeliveryStatusData>;

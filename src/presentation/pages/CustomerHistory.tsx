@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader } from './ui/card';
-import { Badge } from './ui/badge';
+import { Button } from '../../shared/ui/button';
+import { Card, CardContent, CardHeader } from '../../shared/ui/card';
+import { Badge } from '../../shared/ui/badge';
 import { ArrowLeft, Calendar, Package, DollarSign, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 interface CustomerHistoryProps {

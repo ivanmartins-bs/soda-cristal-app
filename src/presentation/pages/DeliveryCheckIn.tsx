@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Button } from '../../shared/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Badge } from '../../shared/ui/badge';
+import { RadioGroup, RadioGroupItem } from '../../shared/ui/radio-group';
+import { Label } from '../../shared/ui/label';
+import { Textarea } from '../../shared/ui/textarea';
+import { Input } from '../../shared/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { ArrowLeft, MapPin, Clock, Package, ShoppingCart, CheckCircle, Droplets } from 'lucide-react';
 
 interface DeliveryCheckInProps {
@@ -25,9 +25,9 @@ export function DeliveryCheckIn({ delivery, onBack, onPDV }: DeliveryCheckInProp
 
   const handleSubmit = async () => {
     if (!status) return;
-    
+
     setIsSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
@@ -90,7 +90,7 @@ export function DeliveryCheckIn({ delivery, onBack, onPDV }: DeliveryCheckInProp
                   {delivery.contractType}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Droplets className="w-5 h-5 text-blue-500" />
                 <div>
@@ -159,7 +159,7 @@ export function DeliveryCheckIn({ delivery, onBack, onPDV }: DeliveryCheckInProp
                 </div>
               </Label>
             </div>
-            
+
             <div className="flex items-center space-x-2 p-3 border rounded-lg border-orange-200 bg-orange-50">
               <RadioGroupItem value="not-home-return" id="not-home-return" />
               <Label htmlFor="not-home-return" className="flex-1 cursor-pointer">
@@ -172,7 +172,7 @@ export function DeliveryCheckIn({ delivery, onBack, onPDV }: DeliveryCheckInProp
                 </div>
               </Label>
             </div>
-            
+
             <div className="flex items-center space-x-2 p-3 border rounded-lg">
               <RadioGroupItem value="not-home-cancel" id="not-home-cancel" />
               <Label htmlFor="not-home-cancel" className="flex-1 cursor-pointer">
@@ -235,7 +235,7 @@ export function DeliveryCheckIn({ delivery, onBack, onPDV }: DeliveryCheckInProp
                         placeholder="1"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="bottle-condition">Estado do Vasilhame</Label>
                       <Select value={bottleCondition} onValueChange={setBottleCondition}>
@@ -274,7 +274,7 @@ export function DeliveryCheckIn({ delivery, onBack, onPDV }: DeliveryCheckInProp
                         ⚠️ {bottleCondition === 'damaged' ? 'Vasilhame danificado' : 'Vasilhame não devolvido'}
                       </p>
                       <p className="text-xs text-orange-700">
-                        {bottleCondition === 'damaged' 
+                        {bottleCondition === 'damaged'
                           ? 'Será necessário trocar o vasilhame na próxima entrega'
                           : 'Cliente deve devolver vasilhame anterior ou será cobrado'
                         }
@@ -312,10 +312,10 @@ export function DeliveryCheckIn({ delivery, onBack, onPDV }: DeliveryCheckInProp
             Adicionar Venda Extra (PDV)
           </Button>
         )}
-        
-        <Button 
-          onClick={handleSubmit} 
-          className="w-full" 
+
+        <Button
+          onClick={handleSubmit}
+          className="w-full"
           disabled={!status || isSubmitting}
         >
           {isSubmitting ? 'Registrando...' : 'Confirmar Check-in'}

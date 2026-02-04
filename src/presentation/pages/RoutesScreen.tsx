@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Badge } from '../../shared/ui/badge';
+import { Input } from '../../shared/ui/input';
+import { Button } from '../../shared/ui/button';
 import { Search, MapPin, Route } from 'lucide-react';
 
 interface Route {

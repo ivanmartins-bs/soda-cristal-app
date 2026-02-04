@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { Input } from './ui/input';
+import { Button } from '../../shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Badge } from '../../shared/ui/badge';
+import { Input } from '../../shared/ui/input';
 import { ArrowLeft, Plus, Minus, ShoppingCart, DollarSign } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
@@ -36,23 +36,23 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
     { id: '4', name: 'Xarope Limão 500ml', price: 8.50, category: 'Xaropes' },
     { id: '5', name: 'Xarope Tutti-Frutti 500ml', price: 8.50, category: 'Xaropes' },
     { id: '6', name: 'Xarope Groselha 500ml', price: 8.50, category: 'Xaropes' },
-    
+
     // Xaropes Premium
     { id: '7', name: 'Xarope Guaraná 1L', price: 15.00, category: 'Xaropes' },
     { id: '8', name: 'Xarope Cola 1L', price: 15.00, category: 'Xaropes' },
     { id: '9', name: 'Xarope Limão 1L', price: 15.00, category: 'Xaropes' },
     { id: '10', name: 'Xarope Mix Frutas 1L', price: 16.00, category: 'Xaropes' },
-    
+
     // Xaropes Especiais
     { id: '11', name: 'Xarope Diet Guaraná 500ml', price: 9.50, category: 'Xaropes Diet' },
     { id: '12', name: 'Xarope Diet Cola 500ml', price: 9.50, category: 'Xaropes Diet' },
     { id: '13', name: 'Xarope Diet Limão 500ml', price: 9.50, category: 'Xaropes Diet' },
-    
+
     // Acessórios para Preparo
     { id: '14', name: 'Dosador para Xarope', price: 12.00, category: 'Acessórios' },
     { id: '15', name: 'Funil Pequeno', price: 5.00, category: 'Acessórios' },
     { id: '16', name: 'Copo Medidor 100ml', price: 8.00, category: 'Acessórios' },
-    
+
     // Combo Promocional
     { id: '17', name: 'Kit 3 Xaropes 500ml', price: 24.00, category: 'Combos' },
     { id: '18', name: 'Kit Família (5 xaropes + dosador)', price: 40.00, category: 'Combos' }
@@ -91,7 +91,7 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
       setCart(prev => prev.filter(item => item.product.id !== productId));
       return;
     }
-    
+
     setCart(prev => prev.map(item =>
       item.product.id === productId
         ? { ...item, quantity }
@@ -185,9 +185,9 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
                           <p className="font-medium">{product.name}</p>
                           <p className="text-lg text-green-600">R$ {product.price.toFixed(2)}</p>
                         </div>
-                        
+
                         {quantity === 0 ? (
-                          <Button 
+                          <Button
                             onClick={() => addToCart(product)}
                             size="sm"
                           >
@@ -195,14 +195,14 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
                           </Button>
                         ) : (
                           <div className="flex items-center space-x-2">
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => removeFromCart(product.id)}
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
-                            
+
                             <Input
                               type="number"
                               value={quantity}
@@ -210,9 +210,9 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
                               className="w-16 text-center"
                               min="0"
                             />
-                            
-                            <Button 
-                              variant="outline" 
+
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => addToCart(product)}
                             >
@@ -252,7 +252,7 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
                 </p>
               </div>
             ))}
-            
+
             <div className="border-t pt-3">
               <div className="flex items-center justify-between text-lg">
                 <span className="font-medium">Total:</span>
@@ -267,7 +267,7 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
 
       {/* Actions */}
       <div className="space-y-3">
-        <Button 
+        <Button
           onClick={handleFinalizeSale}
           className="w-full"
           disabled={cart.length === 0 || isProcessing}
@@ -275,8 +275,8 @@ export function PDVSale({ delivery, onBack, onComplete }: PDVSaleProps) {
           <DollarSign className="w-4 h-4 mr-2" />
           {isProcessing ? 'Processando Venda...' : `Finalizar Venda - R$ ${getTotal().toFixed(2)}`}
         </Button>
-        
-        <Button 
+
+        <Button
           onClick={onComplete}
           variant="outline"
           className="w-full"

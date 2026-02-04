@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../shared/ui/card';
-import { Button } from '../shared/ui/button';
-import { Badge } from '../shared/ui/badge';
-import { Input } from '../shared/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Button } from '../../shared/ui/button';
+import { Badge } from '../../shared/ui/badge';
+import { Input } from '../../shared/ui/input';
 import { Search, UserPlus, MapPin, Phone, Droplets, Users } from 'lucide-react';
 
 interface CustomerListProps {

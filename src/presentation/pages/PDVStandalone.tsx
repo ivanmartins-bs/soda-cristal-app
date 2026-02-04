@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Input } from './ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Button } from '../../shared/ui/button';
+import { Badge } from '../../shared/ui/badge';
+import { Input } from '../../shared/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Search, ShoppingCart, Plus, Minus, User, CreditCard, ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface Product {
   id: string;
@@ -41,23 +41,23 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
     { id: '4', name: 'Xarope Limão 500ml', price: 8.50, category: 'Xaropes' },
     { id: '5', name: 'Xarope Tutti-Frutti 500ml', price: 8.50, category: 'Xaropes' },
     { id: '6', name: 'Xarope Groselha 500ml', price: 8.50, category: 'Xaropes' },
-    
+
     // Xaropes Premium
     { id: '7', name: 'Xarope Guaraná 1L', price: 15.00, category: 'Xaropes Premium' },
     { id: '8', name: 'Xarope Cola 1L', price: 15.00, category: 'Xaropes Premium' },
     { id: '9', name: 'Xarope Limão 1L', price: 15.00, category: 'Xaropes Premium' },
     { id: '10', name: 'Xarope Mix Frutas 1L', price: 16.00, category: 'Xaropes Premium' },
-    
+
     // Xaropes Diet
     { id: '11', name: 'Xarope Diet Guaraná 500ml', price: 9.50, category: 'Xaropes Diet' },
     { id: '12', name: 'Xarope Diet Cola 500ml', price: 9.50, category: 'Xaropes Diet' },
     { id: '13', name: 'Xarope Diet Limão 500ml', price: 9.50, category: 'Xaropes Diet' },
-    
+
     // Acessórios
     { id: '14', name: 'Dosador para Xarope', price: 12.00, category: 'Acessórios' },
     { id: '15', name: 'Funil Pequeno', price: 5.00, category: 'Acessórios' },
     { id: '16', name: 'Copo Medidor 100ml', price: 8.00, category: 'Acessórios' },
-    
+
     // Combos
     { id: '17', name: 'Kit 3 Xaropes 500ml', price: 24.00, category: 'Combos' },
     { id: '18', name: 'Kit Família (5 xaropes + dosador)', price: 40.00, category: 'Combos' }
@@ -96,7 +96,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
       setCart(prev => prev.filter(item => item.product.id !== productId));
       return;
     }
-    
+
     setCart(prev => prev.map(item =>
       item.product.id === productId
         ? { ...item, quantity }
@@ -141,7 +141,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
           <p>Total: R$ {getTotal().toFixed(2)}</p>
         </div>
       );
-      
+
       // Reset form
       setCart([]);
       setCustomerName('');
@@ -172,7 +172,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
               {delivery ? `PDV: ${delivery.customerName}` : 'PDV - Xaropes'}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {delivery 
+              {delivery
                 ? `${delivery.address} • ${delivery.orderCode}`
                 : 'Ponto de venda independente'
               }
@@ -212,7 +212,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
               onChange={(e) => setCustomerName(e.target.value)}
             />
           </div>
-          
+
           <div>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger>
@@ -260,7 +260,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
       <div className="grid grid-cols-1 gap-3">
         {filteredProducts.map((product) => {
           const quantityInCart = getCartItemQuantity(product.id);
-          
+
           return (
             <Card key={product.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
@@ -272,7 +272,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
                       R$ {product.price.toFixed(2)}
                     </p>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     {quantityInCart > 0 ? (
                       <div className="flex items-center space-x-2 bg-blue-50 rounded-lg p-1">
@@ -284,7 +284,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
-                        
+
                         <Input
                           type="number"
                           min="0"
@@ -292,7 +292,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
                           onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 0)}
                           className="w-16 h-8 text-center"
                         />
-                        
+
                         <Button
                           size="sm"
                           variant="ghost"
@@ -335,7 +335,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
                 R$ {getTotal().toFixed(2)}
               </span>
             </div>
-            
+
             <Button
               onClick={handleFinalizeSale}
               disabled={isProcessing || cart.length === 0 || !customerName.trim() || !paymentMethod}

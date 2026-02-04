@@ -1,27 +1,24 @@
 import { useUserStore } from "./domain/auth/userStore";
 import { useUiStore } from "./shared/store/uiStore";
 import { useDeliveryStore } from "./domain/deliveries/deliveryStore";
-import { Toaster } from "./components/ui/sonner";
-import { LoginScreen } from "./components/LoginScreen";
-import { Dashboard } from "./components/Dashboard";
-import {
-  CheckInScreen,
-} from "./components/CheckInScreen";
-import { CustomerRegistration } from "./components/CustomerRegistration";
-import { CustomerList } from "./components/CustomerList";
-import { CustomerHistory } from "./components/CustomerHistory";
-import { PendingContracts } from "./components/PendingContracts";
-import { PDVStandalone } from "./components/PDVStandalone";
-import { RoutesScreen } from "./components/RoutesScreen";
-import { RouteDetails } from "./components/RouteDetails";
-import { DeliveriesOverview } from "./components/DeliveriesOverview";
-import { BottomNavigation } from "./components/BottomNavigation";
-
-
+import { Toaster } from "./shared/ui/sonner";
+import { LoginScreen } from "./presentation/pages/LoginScreen";
+import { Dashboard } from "./presentation/pages/Dashboard";
+import { CheckInScreen } from "./presentation/pages/CheckInScreen";
+import { CustomerRegistration } from "./presentation/pages/CustomerRegistration";
+import { CustomerList } from "./presentation/pages/CustomerList";
+import { CustomerHistory } from "./presentation/pages/CustomerHistory";
+import { PendingContracts } from "./presentation/pages/PendingContracts";
+import { PDVStandalone } from "./presentation/pages/PDVStandalone";
+import { RoutesScreen } from "./presentation/pages/RoutesScreen";
+import { RouteDetails } from "./presentation/pages/RouteDetails";
+import { DeliveriesOverview } from "./presentation/pages/DeliveriesOverview";
+import { BottomNavigation } from "./presentation/components/BottomNavigation";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 export default function App() {
   const { isLoggedIn, login } = useUserStore();
-  const { currentScreen, setCurrentScreen, setSelectedCustomer, selectedCustomer } = useUiStore();
+  const { setSelectedCustomer, selectedCustomer } = useUiStore();
   const {
     selectedDelivery,
     selectedRoute,
@@ -31,190 +28,175 @@ export default function App() {
     updateDeliveryStatus
   } = useDeliveryStore();
 
+  const navigate = useNavigate();
+
   if (!isLoggedIn) {
     return <LoginScreen onLogin={login} />;
   }
 
-  const renderCurrentScreen = () => {
-    switch (currentScreen) {
-      case "deliveries":
-        return (
-          <DeliveriesOverview
-            deliveryStatuses={deliveryStatuses}
-            onSelectDelivery={(delivery) => {
-              setSelectedDelivery(delivery);
-              // Create a route object from the delivery information
-              setSelectedRoute({
-                id: `route-${delivery.id}`,
-                name: delivery.routeName || "Rota Individual",
-                zone:
-                  delivery.address.split(" - ")[1] ||
-                  "Zona não especificada",
-                deliveries: [delivery], // Single delivery route
-              });
-              setCurrentScreen("route-details");
-            }}
-          />
-        );
-
-      case "routes":
-        return (
-          <RoutesScreen
-            onSelectRoute={(route) => {
-              setSelectedRoute(route);
-              setCurrentScreen("route-details");
-            }}
-          />
-        );
-
-      case "route-details":
-        return (
-          <RouteDetails
-            route={selectedRoute}
-            deliveryStatuses={deliveryStatuses}
-            onBack={() => {
-              // Return to the appropriate previous screen
-              if (
-                selectedDelivery &&
-                selectedRoute?.deliveries?.length === 1
-              ) {
-                // If it's a single delivery route, go back to deliveries
-                setCurrentScreen("deliveries");
-              } else {
-                // Otherwise go back to routes
-                setCurrentScreen("routes");
-              }
-            }}
-            onCheckIn={(delivery) => {
-              setSelectedDelivery(delivery);
-              setCurrentScreen("checkin");
-            }}
-            onOpenPDV={(delivery) => {
-              setSelectedDelivery(delivery);
-              setCurrentScreen("pdv-delivery");
-            }}
-          />
-        );
-
-      case "checkin":
-        return (
-          <CheckInScreen
-            delivery={selectedDelivery}
-            onBack={() => setCurrentScreen("route-details")}
-            onCheckInComplete={(delivery, status, hadSale) => {
-              // Update delivery status
-              updateDeliveryStatus(delivery.id, {
-                checkInStatus: status,
-                hadSale: hadSale,
-                timestamp: new Date().toISOString(),
-              });
-
-              if (hadSale) {
-                // Go to PDV if there was a sale
-                setCurrentScreen("pdv-delivery");
-              } else {
-                // Return to route details otherwise
-                setCurrentScreen("route-details");
-              }
-            }}
-          />
-        );
-
-      case "customers":
-        return (
-          <CustomerList
-            onAddCustomer={() =>
-              setCurrentScreen("customer-registration")
-            }
-            onViewContracts={() =>
-              setCurrentScreen("contracts")
-            }
-            onViewHistory={(customer) => {
-              setSelectedCustomer(customer);
-              setCurrentScreen("customer-history");
-            }}
-          />
-        );
-
-      case "customer-history":
-        return (
-          <CustomerHistory
-            customer={selectedCustomer}
-            onBack={() => setCurrentScreen("customers")}
-          />
-        );
-
-      case "customer-registration":
-        return (
-          <CustomerRegistration
-            onBack={() => setCurrentScreen("customers")}
-            onSuccess={() => setCurrentScreen("contracts")}
-          />
-        );
-
-      case "contracts":
-        return (
-          <PendingContracts
-            onBack={() => setCurrentScreen("customers")}
-          />
-        );
-
-      case "pdv":
-        return <PDVStandalone />;
-
-      case "pdv-delivery":
-        return (
-          <PDVStandalone
-            delivery={selectedDelivery}
-            onBack={() => setCurrentScreen("route-details")}
-          />
-        );
-
-      // Legacy dashboard para compatibilidade
-      case "dashboard":
-        return (
-          <Dashboard
-            onSelectDelivery={(delivery) => {
-              setSelectedDelivery(delivery);
-              setCurrentScreen("checkin");
-            }}
-            onAddCustomer={() =>
-              setCurrentScreen("customer-registration")
-            }
-          />
-        );
-
-      default:
-        return (
-          <DeliveriesOverview
-            deliveryStatuses={deliveryStatuses}
-            onSelectDelivery={(delivery) => {
-              setSelectedDelivery(delivery);
-              // Create a route object from the delivery information
-              setSelectedRoute({
-                id: `route-${delivery.id}`,
-                name: delivery.routeName || "Rota Individual",
-                zone:
-                  delivery.address.split(" - ")[1] ||
-                  "Zona não especificada",
-                deliveries: [delivery], // Single delivery route
-              });
-              setCurrentScreen("route-details");
-            }}
-          />
-        );
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="flex-1 overflow-hidden">
-        {renderCurrentScreen()}
+        <Routes>
+          <Route path="/" element={<Navigate to="/deliveries" replace />} />
+
+          <Route
+            path="/deliveries"
+            element={
+              <DeliveriesOverview
+                deliveryStatuses={deliveryStatuses}
+                onSelectDelivery={(delivery) => {
+                  setSelectedDelivery(delivery);
+                  // Create a route object from the delivery information
+                  setSelectedRoute({
+                    id: `route-${delivery.id}`,
+                    name: delivery.routeName || "Rota Individual",
+                    zone:
+                      delivery.address.split(" - ")[1] ||
+                      "Zona não especificada",
+                    deliveries: [delivery], // Single delivery route
+                  });
+                  navigate("/routes/details");
+                }}
+              />
+            }
+          />
+
+          <Route
+            path="/routes"
+            element={
+              <RoutesScreen
+                onSelectRoute={(route) => {
+                  setSelectedRoute(route);
+                  navigate("/routes/details");
+                }}
+              />
+            }
+          />
+
+          <Route
+            path="/routes/details"
+            element={
+              <RouteDetails
+                route={selectedRoute}
+                deliveryStatuses={deliveryStatuses}
+                onBack={() => {
+                  // Return to the appropriate previous screen
+                  if (
+                    selectedDelivery &&
+                    selectedRoute?.deliveries?.length === 1
+                  ) {
+                    navigate("/deliveries");
+                  } else {
+                    navigate("/routes");
+                  }
+                }}
+                onCheckIn={(delivery) => {
+                  setSelectedDelivery(delivery);
+                  navigate("/checkin");
+                }}
+                onOpenPDV={(delivery) => {
+                  setSelectedDelivery(delivery);
+                  navigate("/pdv/delivery");
+                }}
+              />
+            }
+          />
+
+          <Route
+            path="/checkin"
+            element={
+              <CheckInScreen
+                delivery={selectedDelivery}
+                onBack={() => navigate("/routes/details")}
+                onCheckInComplete={(delivery, status, hadSale) => {
+                  // Update delivery status
+                  updateDeliveryStatus(delivery.id, {
+                    checkInStatus: status,
+                    hadSale: hadSale,
+                    timestamp: new Date().toISOString(),
+                  });
+
+                  if (hadSale) {
+                    navigate("/pdv/delivery");
+                  } else {
+                    navigate("/routes/details");
+                  }
+                }}
+              />
+            }
+          />
+
+          <Route
+            path="/customers"
+            element={
+              <CustomerList
+                onAddCustomer={() => navigate("/customers/new")}
+                onViewContracts={() => navigate("/contracts")}
+                onViewHistory={(customer) => {
+                  setSelectedCustomer(customer);
+                  navigate("/customers/history");
+                }}
+              />
+            }
+          />
+
+          <Route
+            path="/customers/history"
+            element={
+              <CustomerHistory
+                customer={selectedCustomer}
+                onBack={() => navigate("/customers")}
+              />
+            }
+          />
+
+          <Route
+            path="/customers/new"
+            element={
+              <CustomerRegistration
+                onBack={() => navigate("/customers")}
+                onSuccess={() => navigate("/contracts")}
+              />
+            }
+          />
+
+          <Route
+            path="/contracts"
+            element={
+              <PendingContracts
+                onBack={() => navigate("/customers")}
+              />
+            }
+          />
+
+          <Route path="/pdv" element={<PDVStandalone />} />
+
+          <Route
+            path="/pdv/delivery"
+            element={
+              <PDVStandalone
+                delivery={selectedDelivery}
+                onBack={() => navigate("/routes/details")}
+              />
+            }
+          />
+
+          <Route
+            path="/dashboard"
+            element={
+              <Dashboard
+                onSelectDelivery={(delivery) => {
+                  setSelectedDelivery(delivery);
+                  navigate("/checkin");
+                }}
+                onAddCustomer={() => navigate("/customers/new")}
+              />
+            }
+          />
+        </Routes>
       </div>
-      <BottomNavigation
-        currentScreen={currentScreen}
-        onNavigate={setCurrentScreen}
-      />
+      <BottomNavigation />
       <Toaster />
     </div>
   );

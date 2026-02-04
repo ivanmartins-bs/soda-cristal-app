@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../shared/ui/card';
-import { Button } from '../shared/ui/button';
-import { Badge } from '../shared/ui/badge';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '../shared/ui/sheet';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Button } from '../../shared/ui/button';
+import { Badge } from '../../shared/ui/badge';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '../../shared/ui/sheet';
 import { ArrowLeft, MapPin, Droplets, Phone, Clock, CheckCircle, ShoppingCart, UserX, AlertCircle, DollarSign, Calendar } from 'lucide-react';
 
-import { Delivery, DeliveryStatusData } from '../domain/deliveries/models';
+import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
 
 interface Route {
   id: string;

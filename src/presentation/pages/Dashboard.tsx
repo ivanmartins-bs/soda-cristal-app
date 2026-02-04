@@ -1,8 +1,8 @@
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
+import { Button } from '../../shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Badge } from '../../shared/ui/badge';
 import { MapPin, Clock, Package, Plus } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+// import { ImageWithFallback } from '../shared/figma/ImageWithFallback';
 
 interface DashboardProps {
   onSelectDelivery: (delivery: any) => void;
@@ -109,11 +109,11 @@ export function Dashboard({ onSelectDelivery, onAddCustomer }: DashboardProps) {
           <p className="text-muted-foreground">Você tem {pendingDeliveries.length} entregas pendentes hoje</p>
         </div>
         <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-          <ImageWithFallback 
+          {/* <ImageWithFallback
             src="https://images.unsplash.com/photo-1569932353341-b518d82f8a54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZWxpdmVyeSUyMG1vdG9yY3ljbGUlMjByaWRlciUyMHVuaWZvcm18ZW58MXx8fHwxNzU4Njc5NTQ5fDA&ixlib=rb-4.1.0&q=80&w=1080"
             alt="Perfil"
             className="w-12 h-12 rounded-full object-cover"
-          />
+          /> */}
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export function Dashboard({ onSelectDelivery, onAddCustomer }: DashboardProps) {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -174,11 +174,10 @@ export function Dashboard({ onSelectDelivery, onAddCustomer }: DashboardProps) {
       {/* Pending Deliveries */}
       <div className="space-y-4">
         <h2 className="text-xl">Entregas do Dia</h2>
-        
+
         {pendingDeliveries.map((delivery, index) => (
-          <Card key={delivery.id} className={`cursor-pointer hover:shadow-md transition-shadow ${
-            delivery.priority === 'high' ? 'border-l-4 border-l-red-500' : ''
-          }`} onClick={() => onSelectDelivery(delivery)}>
+          <Card key={delivery.id} className={`cursor-pointer hover:shadow-md transition-shadow ${delivery.priority === 'high' ? 'border-l-4 border-l-red-500' : ''
+            }`} onClick={() => onSelectDelivery(delivery)}>
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -194,12 +193,12 @@ export function Dashboard({ onSelectDelivery, onAddCustomer }: DashboardProps) {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center text-sm text-muted-foreground mb-2">
                     <MapPin className="w-4 h-4 mr-1" />
                     {delivery.address}
                   </div>
-                  
+
                   <div className="space-y-1 mb-2">
                     <div className="flex items-center space-x-2">
                       <div className="text-sm text-blue-600 font-medium">
@@ -228,7 +227,7 @@ export function Dashboard({ onSelectDelivery, onAddCustomer }: DashboardProps) {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-blue-600">{delivery.distance}</span>
                     <Badge variant="outline">Pendente</Badge>
@@ -238,7 +237,7 @@ export function Dashboard({ onSelectDelivery, onAddCustomer }: DashboardProps) {
             </CardContent>
           </Card>
         ))}
-        
+
         {/* Completed Deliveries */}
         {completedDeliveries.length > 0 && (
           <>
@@ -254,12 +253,12 @@ export function Dashboard({ onSelectDelivery, onAddCustomer }: DashboardProps) {
                           {delivery.time}
                         </Badge>
                       </div>
-                      
+
                       <div className="flex items-center text-sm text-muted-foreground mb-2">
                         <MapPin className="w-4 h-4 mr-1" />
                         {delivery.address}
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-blue-600">{delivery.distance}</span>
                         <Badge className="bg-green-100 text-green-800">Concluída</Badge>

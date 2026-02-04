@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { ArrowLeft, User, MapPin, Phone, FileText, ExternalLink, Package } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { Button } from '../../shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
+import { Input } from '../../shared/ui/input';
+import { Label } from '../../shared/ui/label';
+import { Textarea } from '../../shared/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
+import { ArrowLeft, User, MapPin, FileText, ExternalLink, Package } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface CustomerRegistrationProps {
   onBack: () => void;
@@ -37,17 +37,17 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
-      
+
       // Generate contract link (mock)
-      const contractLink = `https://contracts.sodacristal.com/sign/${Math.random().toString(36).substr(2, 9)}`;
-      
+      // const contractLink = `https://contracts.sodacristal.com/sign/${Math.random().toString(36).substr(2, 9)}`;
+
       toast.success(
         <div>
           <p><strong>Cliente cadastrado com sucesso!</strong></p>
           <p>Contrato gerado e enviado para assinatura.</p>
         </div>
       );
-      
+
       // Show contract link modal or navigate to contracts
       onSuccess();
     }, 2000);
@@ -85,7 +85,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                 required
               />
             </div>
-            
+
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
@@ -96,7 +96,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                 placeholder="joao@example.com"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="phone">Telefone/WhatsApp *</Label>
               <Input
@@ -129,7 +129,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                 required
               />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="neighborhood">Bairro</Label>
@@ -140,7 +140,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                   placeholder="Centro"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="city">Cidade</Label>
                 <Input
@@ -151,7 +151,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                 />
               </div>
             </div>
-            
+
             <div>
               <Label htmlFor="reference">Ponto de Referência</Label>
               <Textarea
@@ -198,8 +198,8 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                   <div>
                     <p className="text-sm font-medium text-blue-900">Contrato de Comodato - Água com Gás</p>
                     <p className="text-sm text-blue-700">
-                      O vasilhame permanece em comodato (empréstimo) com o cliente para fornecimento de água com gás. 
-                      Inclui recargas periódicas conforme frequência escolhida. 
+                      O vasilhame permanece em comodato (empréstimo) com o cliente para fornecimento de água com gás.
+                      Inclui recargas periódicas conforme frequência escolhida.
                       Será gerado um termo de responsabilidade para assinatura digital.
                     </p>
                   </div>
@@ -214,7 +214,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                   <div>
                     <p className="text-sm font-medium text-green-900">Venda Direta de Vasilhame</p>
                     <p className="text-sm text-green-700">
-                      Cliente adquire o vasilhame em definitivo com primeira carga de água com gás. 
+                      Cliente adquire o vasilhame em definitivo com primeira carga de água com gás.
                       Futuras recargas serão vendas avulsas.
                       Contrato de compra e venda será gerado.
                     </p>
@@ -227,21 +227,21 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
 
         {/* Actions */}
         <div className="space-y-3">
-          <Button 
-            type="submit" 
-            className="w-full" 
+          <Button
+            type="submit"
+            className="w-full"
             disabled={!isFormValid || isSubmitting}
           >
             {isSubmitting ? 'Cadastrando e Gerando Contrato...' : 'Cadastrar Cliente'}
           </Button>
-          
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start space-x-2">
               <ExternalLink className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-blue-900">Contrato Digital - Sistema Aditivo</p>
                 <p className="text-sm text-blue-700">
-                  Após o cadastro, um contrato digital será gerado automaticamente. 
+                  Após o cadastro, um contrato digital será gerado automaticamente.
                   Se o cliente já possui contrato, será criado um aditivo sem apagar o anterior.
                   Você poderá enviar o link para o cliente assinar pelo WhatsApp.
                 </p>

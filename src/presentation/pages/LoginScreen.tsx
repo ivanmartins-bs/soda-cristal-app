@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Button } from '../shared/ui/button';
-import { Input } from '../shared/ui/input';
-import { Label } from '../shared/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../shared/ui/card';
+import { Button } from '../../shared/ui/button';
+import { Input } from '../../shared/ui/input';
+import { Label } from '../../shared/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../shared/ui/card';
 
 
-import { useUserStore } from '../domain/auth/userStore';
+import { useUserStore } from '../../domain/auth/userStore';
 
 interface LoginScreenProps {
   onLogin?: () => void;
