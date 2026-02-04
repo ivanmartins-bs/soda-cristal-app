@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
-import { Search, UserPlus, MapPin, Phone, Calendar, Droplets, FileText } from 'lucide-react';
+import { Search, UserPlus, MapPin, Phone, Droplets, Users } from 'lucide-react';
 
 interface CustomerListProps {
   onAddCustomer: () => void;
@@ -11,7 +11,7 @@ interface CustomerListProps {
   onViewHistory?: (customer: any) => void;
 }
 
-export function CustomerList({ onAddCustomer, onViewContracts, onViewHistory }: CustomerListProps) {
+export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts, onViewHistory }: CustomerListProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Mock data de clientes
@@ -160,7 +160,7 @@ export function CustomerList({ onAddCustomer, onViewContracts, onViewHistory }: 
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-3">
               <div className="flex items-center space-x-2">
                 <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -181,7 +181,7 @@ export function CustomerList({ onAddCustomer, onViewContracts, onViewHistory }: 
                     {new Date(customer.lastDelivery).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
-                
+
                 {customer.nextDelivery && (
                   <div>
                     <p className="text-muted-foreground">Próxima entrega:</p>

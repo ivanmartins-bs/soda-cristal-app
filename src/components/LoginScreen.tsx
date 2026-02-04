@@ -3,13 +3,16 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+
+
+import { useUserStore } from '../domain/auth/userStore';
 
 interface LoginScreenProps {
-  onLogin: () => void;
+  onLogin?: () => void;
 }
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
+  const login = useUserStore((state) => state.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,11 +20,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Simulate login delay
     setTimeout(() => {
       setIsLoading(false);
-      onLogin();
+      login();
+      if (onLogin) onLogin();
     }, 1500);
   };
 
@@ -67,7 +71,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
-          
+
 
         </CardContent>
       </Card>

@@ -1,45 +1,38 @@
-import { useState } from "react";
+import { useUserStore } from "./domain/auth/userStore";
+import { useUiStore } from "./shared/store/uiStore";
+import { useDeliveryStore } from "./domain/deliveries/deliveryStore";
 import { Toaster } from "./components/ui/sonner";
 import { LoginScreen } from "./components/LoginScreen";
 import { Dashboard } from "./components/Dashboard";
-import { DeliveryCheckIn } from "./components/DeliveryCheckIn";
 import {
   CheckInScreen,
-  CheckInStatus,
 } from "./components/CheckInScreen";
 import { CustomerRegistration } from "./components/CustomerRegistration";
 import { CustomerList } from "./components/CustomerList";
 import { CustomerHistory } from "./components/CustomerHistory";
 import { PendingContracts } from "./components/PendingContracts";
-import { PDVSale } from "./components/PDVSale";
 import { PDVStandalone } from "./components/PDVStandalone";
 import { RoutesScreen } from "./components/RoutesScreen";
 import { RouteDetails } from "./components/RouteDetails";
 import { DeliveriesOverview } from "./components/DeliveriesOverview";
 import { BottomNavigation } from "./components/BottomNavigation";
 
-// Type for delivery status tracking
-interface DeliveryStatusData {
-  checkInStatus?: CheckInStatus;
-  hadSale?: boolean;
-  timestamp?: string;
-}
+
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentScreen, setCurrentScreen] =
-    useState("deliveries");
-  const [selectedDelivery, setSelectedDelivery] =
-    useState<any>(null);
-  const [selectedCustomer, setSelectedCustomer] =
-    useState<any>(null);
-  const [selectedRoute, setSelectedRoute] = useState<any>(null);
-  const [deliveryStatuses, setDeliveryStatuses] = useState<
-    Record<string, DeliveryStatusData>
-  >({});
+  const { isLoggedIn, login } = useUserStore();
+  const { currentScreen, setCurrentScreen, setSelectedCustomer, selectedCustomer } = useUiStore();
+  const {
+    selectedDelivery,
+    selectedRoute,
+    deliveryStatuses,
+    setSelectedDelivery,
+    setSelectedRoute,
+    updateDeliveryStatus
+  } = useDeliveryStore();
 
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={() => setIsLoggedIn(true)} />;
+    return <LoginScreen onLogin={login} />;
   }
 
   const renderCurrentScreen = () => {
@@ -110,14 +103,11 @@ export default function App() {
             onBack={() => setCurrentScreen("route-details")}
             onCheckInComplete={(delivery, status, hadSale) => {
               // Update delivery status
-              setDeliveryStatuses((prev) => ({
-                ...prev,
-                [delivery.id]: {
-                  checkInStatus: status,
-                  hadSale: hadSale,
-                  timestamp: new Date().toISOString(),
-                },
-              }));
+              updateDeliveryStatus(delivery.id, {
+                checkInStatus: status,
+                hadSale: hadSale,
+                timestamp: new Date().toISOString(),
+              });
 
               if (hadSale) {
                 // Go to PDV if there was a sale

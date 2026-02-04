@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Calendar, Package, DollarSign, CheckCircle, XCircle, Clock } from 'lucide-react';
 
@@ -126,7 +126,7 @@ export function CustomerHistory({ customer, onBack }: CustomerHistoryProps) {
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="pt-3 border-t flex justify-between items-center">
                     <div className="text-sm text-muted-foreground">
                       Pagamento: <span className="font-medium text-gray-700">{record.paymentMethod}</span>

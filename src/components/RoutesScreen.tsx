@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Search, MapPin, Clock, Route, Navigation } from 'lucide-react';
+import { Search, MapPin, Route } from 'lucide-react';
 
 interface Route {
   id: string;
@@ -77,18 +77,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
     route.zone.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-50 text-red-700 border-red-300 shadow-sm';
-      case 'medium':
-        return 'bg-amber-50 text-amber-700 border-amber-300 shadow-sm';
-      case 'low':
-        return 'bg-green-50 text-green-700 border-green-300 shadow-sm';
-      default:
-        return 'bg-gray-50 text-gray-700 border-gray-300 shadow-sm';
-    }
-  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -116,18 +105,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
     }
   };
 
-  const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'Alta';
-      case 'medium':
-        return 'Média';
-      case 'low':
-        return 'Baixa';
-      default:
-        return priority;
-    }
-  };
+
 
   return (
     <div className="p-4 space-y-4 pb-20">
@@ -154,11 +132,10 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
       {/* Routes List */}
       <div className="space-y-3">
         {filteredRoutes.map((route) => (
-          <Card 
-            key={route.id} 
-            className={`hover:shadow-lg transition-all duration-200 cursor-pointer border-2 ${
-              route.status === 'completed' ? 'opacity-75' : 'hover:scale-[1.01]'
-            }`}
+          <Card
+            key={route.id}
+            className={`hover:shadow-lg transition-all duration-200 cursor-pointer border-2 ${route.status === 'completed' ? 'opacity-75' : 'hover:scale-[1.01]'
+              }`}
             style={{ borderColor: route.status === 'completed' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 128, 0, 0.15)' }}
             onClick={() => route.status !== 'completed' && onSelectRoute(route)}
           >
@@ -181,7 +158,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-3">
               {/* Delivery Count */}
               <div className="flex items-center justify-between rounded-lg p-3 shadow-sm" style={{ background: 'linear-gradient(135deg, rgba(0, 128, 0, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%)' }}>
@@ -190,8 +167,8 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
                     <span className="text-sm">{route.pendingDeliveries}</span>
                   </div>
                   <span>
-                    {route.pendingDeliveries === 0 
-                      ? 'Nenhuma entrega pendente' 
+                    {route.pendingDeliveries === 0
+                      ? 'Nenhuma entrega pendente'
                       : `${route.pendingDeliveries} ${route.pendingDeliveries === 1 ? 'entrega pendente' : 'entregas pendentes'}`
                     }
                   </span>
@@ -201,7 +178,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
               {/* Action Button */}
               {route.status === 'pending' && (
                 <div className="pt-2 border-t">
-                  <Button 
+                  <Button
                     className="w-full shadow-md hover:shadow-lg transition-all duration-200"
                     style={{ background: 'linear-gradient(135deg, #008000 0%, #00a000 100%)' }}
                     onClick={(e) => {
@@ -216,7 +193,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
 
               {route.status === 'in-progress' && (
                 <div className="pt-2 border-t">
-                  <Button 
+                  <Button
                     variant="outline"
                     className="w-full border-2 shadow-sm hover:shadow-md transition-all"
                     style={{ borderColor: '#f59e0b', color: '#92400e' }}

@@ -1,36 +1,11 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Clock, CheckCircle, MapPin, Droplets, User, Phone, Calendar, Route, UserX, AlertCircle, DollarSign } from 'lucide-react';
+import { Clock, CheckCircle, MapPin, Droplets, Phone, Calendar, DollarSign, UserX, AlertCircle } from 'lucide-react';
 
-interface Delivery {
-  id: string;
-  orderId: string;
-  orderCode: string;
-  customerName: string;
-  customerPhone: string;
-  address: string;
-  bottles: {
-    quantity: number;
-    size: string;
-  };
-  status: 'pending' | 'completed' | 'failed';
-  priority: 'high' | 'medium' | 'low';
-  estimatedTime: string;
-  completedAt?: string;
-  routeName: string;
-  notes?: string;
-}
-
-type CheckInStatus = 'delivered' | 'no-sale' | 'absent-return' | 'absent-no-return';
-
-interface DeliveryStatusData {
-  checkInStatus?: CheckInStatus;
-  hadSale?: boolean;
-  timestamp?: string;
-}
+import { Delivery, DeliveryStatusData } from '../domain/deliveries/models';
 
 interface DeliveriesOverviewProps {
   deliveryStatuses: Record<string, DeliveryStatusData>;
@@ -46,36 +21,36 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
 
     switch (statusData.checkInStatus) {
       case 'delivered':
-        return { 
-          color: 'bg-green-100 border-green-300', 
+        return {
+          color: 'bg-green-100 border-green-300',
           textColor: 'text-green-800',
           badgeColor: 'bg-green-600 text-white',
-          label: 'Entregue', 
-          icon: CheckCircle 
+          label: 'Entregue',
+          icon: CheckCircle
         };
       case 'no-sale':
-        return { 
-          color: 'bg-gray-100 border-gray-300', 
+        return {
+          color: 'bg-gray-100 border-gray-300',
           textColor: 'text-gray-800',
           badgeColor: 'bg-gray-600 text-white',
-          label: 'Não quis consumir', 
-          icon: UserX 
+          label: 'Não quis consumir',
+          icon: UserX
         };
       case 'absent-return':
-        return { 
-          color: 'bg-yellow-100 border-yellow-300', 
+        return {
+          color: 'bg-yellow-100 border-yellow-300',
           textColor: 'text-yellow-800',
           badgeColor: 'bg-yellow-600 text-white',
-          label: 'Ausente - Retornar', 
-          icon: AlertCircle 
+          label: 'Ausente - Retornar',
+          icon: AlertCircle
         };
       case 'absent-no-return':
-        return { 
-          color: 'bg-red-100 border-red-300', 
+        return {
+          color: 'bg-red-100 border-red-300',
           textColor: 'text-red-800',
           badgeColor: 'bg-red-600 text-white',
-          label: 'Ausente - Não retornar', 
-          icon: UserX 
+          label: 'Ausente - Não retornar',
+          icon: UserX
         };
       default:
         return null;
@@ -198,31 +173,9 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
     }
   ];
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-50 text-red-700 border-red-300 shadow-sm';
-      case 'medium':
-        return 'bg-amber-50 text-amber-700 border-amber-300 shadow-sm';
-      case 'low':
-        return 'bg-green-50 text-green-700 border-green-300 shadow-sm';
-      default:
-        return 'bg-gray-50 text-gray-700 border-gray-300 shadow-sm';
-    }
-  };
 
-  const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'Alta';
-      case 'medium':
-        return 'Média';
-      case 'low':
-        return 'Baixa';
-      default:
-        return priority;
-    }
-  };
+
+
 
   const formatCompletedTime = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -232,104 +185,103 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
   const renderDeliveryCard = (delivery: Delivery, showCompleted = false) => {
     const checkInStatus = getCheckInStatusInfo(delivery.id);
     const statusData = deliveryStatuses[delivery.id];
-    
+
     return (
-    <Card 
-      key={delivery.id} 
-      className={`hover:shadow-lg transition-all duration-200 cursor-pointer border-2 ${
-        checkInStatus ? checkInStatus.color : (showCompleted ? 'bg-green-50/50' : 'hover:scale-[1.02]')
-      }`}
-      style={{ borderColor: checkInStatus ? undefined : (showCompleted ? 'rgba(0, 128, 0, 0.2)' : 'rgba(0, 0, 0, 0.1)') }}
-      onClick={() => onSelectDelivery(delivery)}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg font-bold flex items-center gap-2">
-              {checkInStatus && (() => {
-                const StatusIcon = checkInStatus.icon;
-                return <StatusIcon className={`w-5 h-5 ${checkInStatus.textColor}`} />;
-              })()}
-              {!checkInStatus && showCompleted && <CheckCircle className="w-5 h-5" style={{ color: '#008000' }} />}
-              {delivery.customerName}
-            </CardTitle>
-            <div className="flex items-center space-x-2 flex-wrap gap-1 text-sm text-muted-foreground">
-              <span className="font-medium text-green-700">{delivery.routeName}</span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                Hoje
-              </span>
-              {checkInStatus && (
-                <>
-                  <Badge variant="outline" className={`${checkInStatus.badgeColor} border-0 text-xs ml-1`}>
-                    {checkInStatus.label}
-                  </Badge>
-                  {statusData?.hadSale && (
-                    <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-300">
-                      <DollarSign className="w-3 h-3 mr-0.5" />
-                      Venda
+      <Card
+        key={delivery.id}
+        className={`hover:shadow-lg transition-all duration-200 cursor-pointer border-2 ${checkInStatus ? checkInStatus.color : (showCompleted ? 'bg-green-50/50' : 'hover:scale-[1.02]')
+          }`}
+        style={{ borderColor: checkInStatus ? undefined : (showCompleted ? 'rgba(0, 128, 0, 0.2)' : 'rgba(0, 0, 0, 0.1)') }}
+        onClick={() => onSelectDelivery(delivery)}
+      >
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                {checkInStatus && (() => {
+                  const StatusIcon = checkInStatus.icon;
+                  return <StatusIcon className={`w-5 h-5 ${checkInStatus.textColor}`} />;
+                })()}
+                {!checkInStatus && showCompleted && <CheckCircle className="w-5 h-5" style={{ color: '#008000' }} />}
+                {delivery.customerName}
+              </CardTitle>
+              <div className="flex items-center space-x-2 flex-wrap gap-1 text-sm text-muted-foreground">
+                <span className="font-medium text-green-700">{delivery.routeName}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Hoje
+                </span>
+                {checkInStatus && (
+                  <>
+                    <Badge variant="outline" className={`${checkInStatus.badgeColor} border-0 text-xs ml-1`}>
+                      {checkInStatus.label}
                     </Badge>
-                  )}
-                </>
-              )}
+                    {statusData?.hadSale && (
+                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-300">
+                        <DollarSign className="w-3 h-3 mr-0.5" />
+                        Venda
+                      </Badge>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col space-y-1 items-end">
+              <div className="flex items-center space-x-1">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  {showCompleted && delivery.completedAt
+                    ? formatCompletedTime(delivery.completedAt)
+                    : delivery.estimatedTime
+                  }
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col space-y-1 items-end">
-            <div className="flex items-center space-x-1">
-              <Clock className="w-3 h-3 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">
-                {showCompleted && delivery.completedAt 
-                  ? formatCompletedTime(delivery.completedAt)
-                  : delivery.estimatedTime
-                }
-              </span>
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-3">
-        <div className="flex items-center space-x-2">
-          <MapPin className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">{delivery.address}</span>
-        </div>
+        </CardHeader>
 
-        <div className="flex items-center space-x-2">
-          <Phone className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">{delivery.customerPhone}</span>
-        </div>
-
-        <div className="flex items-center justify-between">
+        <CardContent className="space-y-3">
           <div className="flex items-center space-x-2">
-            <Droplets className="w-4 h-4" style={{ color: '#06b6d4' }} />
-            <span className="text-sm">
-              {delivery.bottles.quantity} garrafas de {delivery.bottles.size}
-            </span>
+            <MapPin className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">{delivery.address}</span>
           </div>
-        </div>
 
-        {delivery.notes && (
-          <div className="border-2 rounded-lg p-2.5" style={{ background: 'rgba(251, 191, 36, 0.08)', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
-            <p className="text-sm" style={{ color: '#92400e' }}>
-              <strong>Observação:</strong> {delivery.notes}
-            </p>
+          <div className="flex items-center space-x-2">
+            <Phone className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">{delivery.customerPhone}</span>
           </div>
-        )}
 
-        {showCompleted && delivery.completedAt && (
-          <div className="pt-2 border-t rounded-lg p-2.5 -mx-2 -mb-2" style={{ background: 'linear-gradient(135deg, rgba(0, 128, 0, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)' }}>
-            <div className="flex items-center justify-center space-x-2">
-              <CheckCircle className="w-4 h-4" style={{ color: '#008000' }} />
-              <span className="text-sm" style={{ color: '#006600' }}>
-                Concluída em {formatCompletedTime(delivery.completedAt)}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Droplets className="w-4 h-4" style={{ color: '#06b6d4' }} />
+              <span className="text-sm">
+                {delivery.bottles.quantity} garrafas de {delivery.bottles.size}
               </span>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+
+          {delivery.notes && (
+            <div className="border-2 rounded-lg p-2.5" style={{ background: 'rgba(251, 191, 36, 0.08)', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
+              <p className="text-sm" style={{ color: '#92400e' }}>
+                <strong>Observação:</strong> {delivery.notes}
+              </p>
+            </div>
+          )}
+
+          {showCompleted && delivery.completedAt && (
+            <div className="pt-2 border-t rounded-lg p-2.5 -mx-2 -mb-2" style={{ background: 'linear-gradient(135deg, rgba(0, 128, 0, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)' }}>
+              <div className="flex items-center justify-center space-x-2">
+                <CheckCircle className="w-4 h-4" style={{ color: '#008000' }} />
+                <span className="text-sm" style={{ color: '#006600' }}>
+                  Concluída em {formatCompletedTime(delivery.completedAt)}
+                </span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -352,7 +304,7 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="text-center border-2 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: 'rgba(16, 185, 129, 0.15)', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, rgba(255, 255, 255, 1) 100%)' }}>
           <CardContent className="p-4">
             <div className="space-y-1">
@@ -361,7 +313,7 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="text-center border-2 shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: 'rgba(6, 182, 212, 0.15)', background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.03) 0%, rgba(255, 255, 255, 1) 100%)' }}>
           <CardContent className="p-4">
             <div className="space-y-1">

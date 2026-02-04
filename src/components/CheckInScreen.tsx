@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { ArrowLeft, MapPin, Clock, CheckCircle, Navigation, Wifi, Package, UserX, UserCheck, AlertCircle, DollarSign, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, CheckCircle, Navigation, Wifi, AlertCircle, ShoppingCart, UserX } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { Switch } from './ui/switch';
-import { Label } from './ui/label';
+
 
 interface CheckInRecord {
   id: string;
@@ -17,7 +16,7 @@ interface CheckInRecord {
   hadSale?: boolean;
 }
 
-export type CheckInStatus = 'delivered' | 'no-sale' | 'absent-return' | 'absent-no-return';
+import { CheckInStatus } from '../domain/deliveries/models';
 
 interface CheckInScreenProps {
   delivery?: any;
@@ -95,7 +94,7 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
     // Simulate API call for check-in
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // Show status selection screen
       setShowStatusSelection(true);
 
@@ -185,10 +184,10 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
       <div className="flex flex-col h-screen bg-gradient-to-b from-green-50 to-white">
         <div className="bg-white border-b border-border p-4 shadow-sm">
           <div className="flex items-center space-x-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowSaleDecision(false)} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSaleDecision(false)}
               className="p-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -234,10 +233,10 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
         {/* Header */}
         <div className="bg-white border-b border-border p-4 shadow-sm">
           <div className="flex items-center space-x-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowStatusSelection(false)} 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowStatusSelection(false)}
               className="p-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -358,125 +357,124 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
         <div className="p-4 h-[60vh] min-h-[400px]">
           <Card className="h-full shadow-md">
             <CardContent className="p-0 h-full flex flex-col">
-            {/* Map Placeholder */}
-            <div className="flex-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-t-lg flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <div className="relative">
-                  <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
-                    <Navigation className="w-12 h-12 text-white" />
+              {/* Map Placeholder */}
+              <div className="flex-1 bg-gradient-to-br from-blue-100 to-blue-200 rounded-t-lg flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <div className="relative">
+                    <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                      <Navigation className="w-12 h-12 text-white" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    </div>
                   </div>
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md">
-                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-blue-800">Sua Localização Atual</p>
-                  <div className="flex items-center justify-center space-x-2">
-                    <MapPin className="w-4 h-4 text-blue-600" />
-                    <p className="text-sm text-blue-600 font-mono">
-                      {currentLocation}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center space-x-1">
-                    <Wifi className="w-3 h-3 text-green-600" />
-                    <span className="text-xs text-green-600">GPS Conectado</span>
+                  <div className="space-y-1">
+                    <p className="font-medium text-blue-800">Sua Localização Atual</p>
+                    <div className="flex items-center justify-center space-x-2">
+                      <MapPin className="w-4 h-4 text-blue-600" />
+                      <p className="text-sm text-blue-600 font-mono">
+                        {currentLocation}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center space-x-1">
+                      <Wifi className="w-3 h-3 text-green-600" />
+                      <span className="text-xs text-green-600">GPS Conectado</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Check-in Button */}
-            <div className="p-4 border-t bg-white rounded-b-lg">
-              <Button 
-                onClick={handleCheckIn}
-                disabled={isLoading || currentLocation === 'Aguardando localização...'}
-                className="w-full h-14 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md text-lg font-semibold"
-              >
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Enviando Check-in...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-5 h-5" />
-                    <span>Enviar Check-in</span>
-                  </div>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Check-in History */}
-      <div className="p-4 pb-20 bg-gray-50">
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center">
-              <Clock className="w-4 h-4 mr-2" />
-              Últimos Check-ins
-            </CardTitle>
-            <CardDescription>
-              Histórico dos últimos 5 check-ins realizados
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {lastCheckIns.length === 0 ? (
-              <div className="text-center py-4">
-                <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Nenhum check-in realizado ainda
-                </p>
+              {/* Check-in Button */}
+              <div className="p-4 border-t bg-white rounded-b-lg">
+                <Button
+                  onClick={handleCheckIn}
+                  disabled={isLoading || currentLocation === 'Aguardando localização...'}
+                  className="w-full h-14 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md text-lg font-semibold"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Enviando Check-in...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="w-5 h-5" />
+                      <span>Enviar Check-in</span>
+                    </div>
+                  )}
+                </Button>
               </div>
-            ) : (
-              lastCheckIns.map((checkIn, index) => {
-                const { date, time } = formatTimestamp(checkIn.timestamp);
-                const statusInfo = getStatusInfo(checkIn.status);
-                const StatusIcon = statusInfo.icon;
-                
-                return (
-                  <div 
-                    key={checkIn.id} 
-                    className={`flex items-start space-x-3 p-3 rounded-lg border-2 ${statusInfo.color} transition-all`}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      index === 0 ? 'ring-2 ring-offset-2 ring-green-400' : ''
-                    }`}>
-                      <StatusIcon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm">
-                            {checkIn.customerName || 'Check-in Geral'}
-                          </p>
-                          {checkIn.hadSale && (
-                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-300">
-                              💰 Venda
-                            </Badge>
-                          )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Check-in History */}
+        <div className="p-4 pb-20 bg-gray-50">
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center">
+                <Clock className="w-4 h-4 mr-2" />
+                Últimos Check-ins
+              </CardTitle>
+              <CardDescription>
+                Histórico dos últimos 5 check-ins realizados
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {lastCheckIns.length === 0 ? (
+                <div className="text-center py-4">
+                  <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum check-in realizado ainda
+                  </p>
+                </div>
+              ) : (
+                lastCheckIns.map((checkIn, index) => {
+                  const { date, time } = formatTimestamp(checkIn.timestamp);
+                  const statusInfo = getStatusInfo(checkIn.status);
+                  const StatusIcon = statusInfo.icon;
+
+                  return (
+                    <div
+                      key={checkIn.id}
+                      className={`flex items-start space-x-3 p-3 rounded-lg border-2 ${statusInfo.color} transition-all`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index === 0 ? 'ring-2 ring-offset-2 ring-green-400' : ''
+                        }`}>
+                        <StatusIcon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">
+                              {checkIn.customerName || 'Check-in Geral'}
+                            </p>
+                            {checkIn.hadSale && (
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 border-green-300">
+                                💰 Venda
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">{date}</p>
+                            <p className="text-xs font-medium">{time}</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">{date}</p>
-                          <p className="text-xs font-medium">{time}</p>
+                        <Badge variant="outline" className={`text-xs ${statusInfo.color} border-0`}>
+                          {statusInfo.label}
+                        </Badge>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="w-3 h-3 text-muted-foreground" />
+                          <p className="text-xs text-muted-foreground">{checkIn.address}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={`text-xs ${statusInfo.color} border-0`}>
-                        {statusInfo.label}
-                      </Badge>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="w-3 h-3 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">{checkIn.address}</p>
-                      </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

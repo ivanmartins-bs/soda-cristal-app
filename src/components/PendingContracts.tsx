@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { ArrowLeft, FileText, Clock, CheckCircle, Share, Copy, MessageCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, CheckCircle, Copy, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
 interface PendingContractsProps {
@@ -113,7 +113,7 @@ export function PendingContracts({ onBack }: PendingContractsProps) {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -131,7 +131,7 @@ export function PendingContracts({ onBack }: PendingContractsProps) {
       {pendingContracts.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-lg">Aguardando Assinatura</h2>
-          
+
           {pendingContracts.map((contract) => (
             <Card key={contract.id} className={`${contract.isAddendum ? 'border-blue-200 bg-blue-50' : 'border-orange-200'}`}>
               <CardHeader>
@@ -157,7 +157,7 @@ export function PendingContracts({ onBack }: PendingContractsProps) {
                 <div className="flex items-center text-sm text-muted-foreground">
                   <span>{contract.customerPhone}</span>
                 </div>
-                
+
                 {contract.isAddendum && (
                   <div className="bg-blue-100 border border-blue-200 rounded p-2">
                     <p className="text-xs text-blue-700">
@@ -165,20 +165,20 @@ export function PendingContracts({ onBack }: PendingContractsProps) {
                     </p>
                   </div>
                 )}
-                
+
                 <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1"
                     onClick={() => copyToClipboard(contract.link, contract.customerName)}
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copiar Link
                   </Button>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     onClick={() => sendWhatsApp(contract.customerPhone, contract.customerName, contract.link)}
                   >
@@ -196,7 +196,7 @@ export function PendingContracts({ onBack }: PendingContractsProps) {
       {signedContracts.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-lg text-muted-foreground">Contratos Assinados</h2>
-          
+
           {signedContracts.map((contract) => (
             <Card key={contract.id} className="opacity-75 border-green-200">
               <CardHeader>
