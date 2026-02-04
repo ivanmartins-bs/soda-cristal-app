@@ -1,12 +1,10 @@
-import { Button } from '../../shared/ui/button';
-import { Home, Users, ShoppingCart, Route, LogOut } from 'lucide-react';
+import { Button } from '../shared/ui/button';
+import { Home, Users, ShoppingCart, Route } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useUserStore } from '../../domain/auth/userStore';
 
 export function BottomNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const logout = useUserStore((state) => state.logout);
 
   const navItems = [
     {
@@ -22,12 +20,6 @@ export function BottomNavigation() {
       path: '/routes'
     },
     {
-      id: 'logout',
-      label: 'Sair',
-      icon: LogOut,
-      onClick: () => logout()
-    },
-    {
       id: 'customers',
       label: 'Clientes',
       icon: Users,
@@ -39,12 +31,10 @@ export function BottomNavigation() {
       icon: ShoppingCart,
       path: '/pdv'
     }
-
   ];
 
   // Helper to check if a path is active
-  const isPathActive = (itemPath: string | undefined) => {
-    if (!itemPath) return false;
+  const isPathActive = (itemPath: string) => {
     if (itemPath === '/deliveries' && location.pathname === '/') return true;
     return location.pathname.startsWith(itemPath);
   };
@@ -61,25 +51,20 @@ export function BottomNavigation() {
               key={item.id}
               variant="ghost"
               className={`flex flex-col items-center gap-0.5 h-16 px-2 transition-all duration-200 ${isActive
-                ? 'text-red-500'
+                ? 'text-primary'
                 : 'text-muted-foreground hover:text-primary/70'
                 }`}
-              onClick={() => { item.onClick ? item.onClick() : navigate(item.path) }}
+              onClick={() => navigate(item.path)}
             >
               <div className={`p-2 rounded-xl transition-all duration-200 ${isActive
                 ? 'bg-primary/10 scale-105'
                 : 'hover:bg-primary/5'
                 }`}>
-                <Icon className={`w-5 h-5 transition-all duration-200 
-                  ${item.id === 'logout'
-                    ? 'text-red-500' : isActive ? 'text-primary' : 'text-black'}
-                `} />
+                <Icon className={`w-5 h-5 transition-all duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
               </div>
-              <span className={`text-[10px] transition-all duration-200 
-                ${item.id === 'logout'
-                  ? 'text-red-500'
-                  : isActive ? 'text-primary' : 'text-black '}
-                `}>
+              <span className={`text-[10px] transition-all duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground'
+                }`}>
                 {item.label}
               </span>
             </Button>

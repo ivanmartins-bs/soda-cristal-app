@@ -17,7 +17,7 @@ import { BottomNavigation } from "./presentation/components/BottomNavigation";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 
 export default function App() {
-  const { isLoggedIn, login } = useUserStore();
+  const { isLoggedIn } = useUserStore();
   const { setSelectedCustomer, selectedCustomer } = useUiStore();
   const {
     selectedDelivery,
@@ -31,7 +31,7 @@ export default function App() {
   const navigate = useNavigate();
 
   if (!isLoggedIn) {
-    return <LoginScreen onLogin={login} />;
+    return <LoginScreen />;
   }
 
   return (

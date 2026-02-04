@@ -27,8 +27,16 @@ interface RouteDetailsProps {
 
 export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpenPDV }: RouteDetailsProps) {
   const [_selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
-
+  if (!route) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-muted-foreground">Nenhuma rota selecionada.</p>
+        <Button onClick={onBack} variant="link">Voltar</Button>
+      </div>
+    );
+  }
   const getCheckInStatusInfo = (deliveryId: string) => {
+
     const statusData = deliveryStatuses[deliveryId];
     if (!statusData || !statusData.checkInStatus) return null;
 

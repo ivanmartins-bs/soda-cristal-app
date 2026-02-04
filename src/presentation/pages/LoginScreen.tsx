@@ -13,20 +13,23 @@ interface LoginScreenProps {
 
 export function LoginScreen({ onLogin }: LoginScreenProps) {
   const login = useUserStore((state) => state.login);
-  const [email, setEmail] = useState('');
+  const isLoading = useUserStore((state) => state.isLoading);
+  const error = useUserStore((state) => state.error);
+
+  const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // Removed local isLoading state
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate login delay
-    setTimeout(() => {
-      setIsLoading(false);
-      login();
+    try {
+      await login({ username: user, password });
       if (onLogin) onLogin();
-    }, 1500);
+    } catch (err) {
+      console.log(err);
+      // Error is handled by store and displayed below
+    }
   };
 
   return (
@@ -49,10 +52,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                type="email"
-                placeholder="seu.email@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="user"
+                placeholder="user.example"
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
                 required
               />
             </div>
@@ -71,6 +74,12 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md text-sm text-center">
+              {error}
+            </div>
+          )}
 
 
         </CardContent>
