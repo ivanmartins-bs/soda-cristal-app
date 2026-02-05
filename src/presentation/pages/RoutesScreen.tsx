@@ -3,81 +3,81 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Badge } from '../../shared/ui/badge';
 import { Input } from '../../shared/ui/input';
 import { Button } from '../../shared/ui/button';
-import { Search, MapPin, Route } from 'lucide-react';
+import { Skeleton } from '../../shared/ui/skeleton';
+import { Search, MapPin, Route, AlertCircle, RefreshCw } from 'lucide-react';
+import { useRotas } from '../hooks/useRotas';
+import { Rota } from '../../domain/rotas/models';
+import { useRotasStore } from '../../domain/rotas/rotasStore';
 
-interface Route {
-  id: string;
-  name: string;
-  zone: string;
+interface RouteUI extends Rota {
   pendingDeliveries: number;
   priority: 'high' | 'medium' | 'low';
   status: 'pending' | 'in-progress' | 'completed';
 }
 
 interface RoutesScreenProps {
-  onSelectRoute: (route: Route) => void;
+  onSelectRoute: (route: any) => void;
 }
 
 export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const { rotas, isLoading, error, reload } = useRotas();
+  const { selectRota } = useRotasStore();
 
-  const routes: Route[] = [
+  // Mock data fallback
+  const mockRoutes: RouteUI[] = [
     {
-      id: 'route-001',
-      name: 'Rota A - Centro (Segunda e Quarta)',
-      zone: 'Centro',
+      id: 991,
+      nome: 'Rota A - Centro (Demo)',
+      frequencia: 'Segunda e Quarta',
+      observacao: '',
+      ativo: 1,
+      checkin_fechado: 0,
+      cidade_id: 1,
       pendingDeliveries: 8,
       priority: 'high',
       status: 'pending'
     },
     {
-      id: 'route-002',
-      name: 'Rota B - Vila Nova (Terça e Quinta)',
-      zone: 'Vila Nova',
+      id: 992,
+      nome: 'Rota B - Vila Nova (Demo)',
+      frequencia: 'Terça e Quinta',
+      observacao: '',
+      ativo: 1,
+      checkin_fechado: 0,
+      cidade_id: 1,
       pendingDeliveries: 6,
       priority: 'medium',
       status: 'pending'
     },
     {
-      id: 'route-003',
-      name: 'Rota C - Jardim (Segunda e Quarta)',
-      zone: 'Jardim',
+      id: 993,
+      nome: 'Rota C - Jardim (Demo)',
+      frequencia: 'Segunda e Quarta',
+      observacao: '',
+      ativo: 1,
+      checkin_fechado: 0,
+      cidade_id: 1,
       pendingDeliveries: 12,
       priority: 'high',
       status: 'pending'
-    },
-    {
-      id: 'route-004',
-      name: 'Rota D - Industrial (Terça e Quinta)',
-      zone: 'Industrial',
-      pendingDeliveries: 4,
-      priority: 'low',
-      status: 'in-progress'
-    },
-    {
-      id: 'route-005',
-      name: 'Rota E - Comercial (Segunda e Quarta)',
-      zone: 'Comercial',
-      pendingDeliveries: 10,
-      priority: 'medium',
-      status: 'pending'
-    },
-    {
-      id: 'route-006',
-      name: 'Rota F - Residencial (Terça e Quinta)',
-      zone: 'Residencial',
-      pendingDeliveries: 0,
-      priority: 'low',
-      status: 'completed'
     }
   ];
 
-  const filteredRoutes = routes.filter(route =>
-    route.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    route.zone.toLowerCase().includes(searchTerm.toLowerCase())
+  // Adapter para converter Rota do domínio para o formato UI
+  const mappedRoutes: RouteUI[] = rotas.map(rota => ({
+    ...rota,
+    pendingDeliveries: 0, // Mockado por enquanto
+    priority: 'medium',   // Mockado por enquanto
+    status: rota.checkin_fechado ? 'completed' : 'pending' // Inferido
+  }));
+
+  const displayRoutes = mappedRoutes.length > 0 ? mappedRoutes : mockRoutes;
+
+  const filteredRoutes = displayRoutes.filter(route =>
+    route.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (route.frequencia && route.frequencia.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -105,7 +105,35 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-4 space-y-4 pb-20">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-10 w-full" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-40 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="p-4 flex flex-col items-center justify-center h-[calc(100vh-100px)] text-center space-y-4">
+        <AlertCircle className="w-12 h-12 text-red-500" />
+        <h2 className="text-xl font-semibold text-gray-900">Erro ao carregar rotas</h2>
+        <p className="text-gray-500 max-w-xs">{error}</p>
+        <Button onClick={reload} variant="outline" className="gap-2">
+          <RefreshCw className="w-4 h-4" /> Tentar Novamente
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-4 pb-20">
@@ -113,8 +141,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold">Rotas Disponíveis</h1>
         <p className="text-sm text-muted-foreground">
-          {filteredRoutes.filter(r => r.status === 'pending').length} rotas pendentes • {' '}
-          {filteredRoutes.reduce((total, route) => total + route.pendingDeliveries, 0)} entregas totais
+          {filteredRoutes.filter(r => r.status === 'pending').length} rotas pendentes
         </p>
       </div>
 
@@ -122,7 +149,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
       <div className="relative">
         <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nome da rota ou zona..."
+          placeholder="Buscar por nome da rota..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
@@ -137,18 +164,23 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
             className={`hover:shadow-lg transition-all duration-200 cursor-pointer border-2 ${route.status === 'completed' ? 'opacity-75' : 'hover:scale-[1.01]'
               }`}
             style={{ borderColor: route.status === 'completed' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 128, 0, 0.15)' }}
-            onClick={() => route.status !== 'completed' && onSelectRoute(route)}
+            onClick={() => {
+              if (route.status !== 'completed') {
+                selectRota(route.id);
+                onSelectRoute(route);
+              }
+            }}
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <CardTitle className="text-lg flex items-center">
                     <Route className="w-5 h-5 mr-2" style={{ color: '#008000' }} />
-                    {route.name}
+                    {route.nome}
                   </CardTitle>
                   <div className="flex items-center space-x-2">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{route.zone}</span>
+                    <span className="text-sm text-muted-foreground">{route.frequencia || 'Sem frequência definida'}</span>
                   </div>
                 </div>
                 <div className="flex flex-col space-y-1">
@@ -160,21 +192,6 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
             </CardHeader>
 
             <CardContent className="space-y-3">
-              {/* Delivery Count */}
-              <div className="flex items-center justify-between rounded-lg p-3 shadow-sm" style={{ background: 'linear-gradient(135deg, rgba(0, 128, 0, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%)' }}>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 text-white rounded-full flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #008000 0%, #00a000 100%)' }}>
-                    <span className="text-sm">{route.pendingDeliveries}</span>
-                  </div>
-                  <span>
-                    {route.pendingDeliveries === 0
-                      ? 'Nenhuma entrega pendente'
-                      : `${route.pendingDeliveries} ${route.pendingDeliveries === 1 ? 'entrega pendente' : 'entregas pendentes'}`
-                    }
-                  </span>
-                </div>
-              </div>
-
               {/* Action Button */}
               {route.status === 'pending' && (
                 <div className="pt-2 border-t">
@@ -183,6 +200,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
                     style={{ background: 'linear-gradient(135deg, #008000 0%, #00a000 100%)' }}
                     onClick={(e) => {
                       e.stopPropagation();
+                      selectRota(route.id);
                       onSelectRoute(route);
                     }}
                   >
@@ -199,6 +217,7 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
                     style={{ borderColor: '#f59e0b', color: '#92400e' }}
                     onClick={(e) => {
                       e.stopPropagation();
+                      selectRota(route.id);
                       onSelectRoute(route);
                     }}
                   >

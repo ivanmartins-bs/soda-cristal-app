@@ -1,19 +1,95 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
-
 import { Badge } from '../../shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
-import { Clock, CheckCircle, MapPin, Droplets, Phone, Calendar, DollarSign, UserX, AlertCircle } from 'lucide-react';
-
+import { Skeleton } from '../../shared/ui/skeleton';
+import { Button } from '../../shared/ui/button';
+import { CheckCircle, MapPin, Droplets, Phone, Calendar, DollarSign, UserX, AlertCircle, RefreshCw } from 'lucide-react';
+import { useRotasStore } from '../../domain/rotas/rotasStore';
 import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
+import { RotaEntregaCompleta } from '../../domain/rotas/models';
 
 interface DeliveriesOverviewProps {
   deliveryStatuses: Record<string, DeliveryStatusData>;
   onSelectDelivery: (delivery: Delivery) => void;
+  rotaId?: number; // Optional: pass ID explicitly if needed
 }
 
-export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: DeliveriesOverviewProps) {
+export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery, rotaId }: DeliveriesOverviewProps) {
   const [selectedTab, setSelectedTab] = useState('today');
+  const { rotaAtual, clientesRota, isLoading, error, loadClientesRota } = useRotasStore();
+
+  // Se rotaId foi passado, carrega a rota
+  useEffect(() => {
+    if (rotaId) {
+      loadClientesRota(rotaId);
+    }
+  }, [rotaId, loadClientesRota]);
+
+  // Adapter: Converter RotaEntregaCompleta (Domínio Rotas) para Delivery (Model UI/Deliveries)
+  const mapClienteToDelivery = (item: RotaEntregaCompleta): Delivery => {
+    return {
+      id: item.rotaentrega.id.toString(),
+      orderId: `PED-${item.rotaentrega.id}`, // Mock
+      orderCode: `SCT-${item.cliente.id}`,   // Mock
+      customerName: item.cliente.nome,
+      customerPhone: item.cliente.telefone || item.cliente.telefone2 || '',
+      address: `${item.cliente.endereco}, ${item.cliente.numero} - ${item.cliente.bairro}`,
+      bottles: {
+        quantity: item.rotaentrega.num_garrafas || 0,
+        size: '20L' // Padrão
+      },
+      status: 'pending', // TODO: Integrar status real
+      priority: 'medium', // TODO: Integrar prioridade real
+      estimatedTime: '08:00', // Mock
+      routeName: item.rota.nome,
+      notes: item.cliente.observacao
+    };
+  };
+
+  const mockDeliveries: Delivery[] = [
+    {
+      id: 'mock-001',
+      orderId: 'PED-MOCK-001',
+      orderCode: 'SCT001',
+      customerName: 'Cliente Demo 1',
+      customerPhone: '(11) 99999-1234',
+      address: 'Rua Exemplo, 123 - Centro',
+      bottles: { quantity: 3, size: '20L' },
+      status: 'pending',
+      priority: 'high',
+      estimatedTime: '09:00',
+      routeName: 'Rota Demo',
+      notes: 'Dados de demonstração (API vazia)'
+    },
+    {
+      id: 'mock-002',
+      orderId: 'PED-MOCK-002',
+      orderCode: 'SCT002',
+      customerName: 'Cliente Demo 2',
+      customerPhone: '(11) 99999-5678',
+      address: 'Av. Teste, 456 - Bairro',
+      bottles: { quantity: 2, size: '20L' },
+      status: 'pending',
+      priority: 'medium',
+      estimatedTime: '10:30',
+      routeName: 'Rota Demo'
+    }
+  ];
+
+  const allDeliveries = clientesRota.length > 0 ? clientesRota.map(mapClienteToDelivery) : mockDeliveries;
+
+  // Como não temos status real de entrega na API de rotas (ainda), 
+  // vamos considerar 'pending' como padrão, ou usar o deliveryStatuses local
+  const todayDeliveries = allDeliveries.filter(d => {
+    const status = deliveryStatuses[d.id]?.checkInStatus;
+    return !status || status === undefined; // Se não tem status, é pendente
+  });
+
+  const completedDeliveries = allDeliveries.filter(d => {
+    const status = deliveryStatuses[d.id]?.checkInStatus;
+    return status !== undefined; // Se tem status, está concluído/processado
+  });
 
   const getCheckInStatusInfo = (deliveryId: string) => {
     const statusData = deliveryStatuses[deliveryId];
@@ -57,127 +133,8 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
     }
   };
 
-  // Mock data das entregas
-  const todayDeliveries: Delivery[] = [
-    {
-      id: 'del-001',
-      orderId: 'PED-2024-001',
-      orderCode: 'SCT001',
-      customerName: 'João Silva',
-      customerPhone: '(11) 99999-1234',
-      address: 'Rua das Flores, 123 - Centro',
-      bottles: { quantity: 3, size: '20L' },
-      status: 'pending',
-      priority: 'high',
-      estimatedTime: '09:00',
-      routeName: 'Rota A - Centro',
-      notes: 'Portão azul, interfone 23'
-    },
-    {
-      id: 'del-002',
-      orderId: 'PED-2024-002',
-      orderCode: 'SCT002',
-      customerName: 'Maria Santos',
-      customerPhone: '(11) 99999-5678',
-      address: 'Av. Principal, 456 - Centro',
-      bottles: { quantity: 2, size: '20L' },
-      status: 'pending',
-      priority: 'medium',
-      estimatedTime: '09:30',
-      routeName: 'Rota A - Centro'
-    },
-    {
-      id: 'del-003',
-      orderId: 'PED-2024-003',
-      orderCode: 'SCT003',
-      customerName: 'Ana Costa',
-      customerPhone: '(11) 99999-3456',
-      address: 'Rua da Paz, 321 - Centro',
-      bottles: { quantity: 4, size: '20L' },
-      status: 'pending',
-      priority: 'high',
-      estimatedTime: '10:30',
-      routeName: 'Rota A - Centro',
-      notes: 'Entregar apenas pela manhã'
-    },
-    {
-      id: 'del-004',
-      orderId: 'PED-2024-004',
-      orderCode: 'SCT004',
-      customerName: 'Roberto Lima',
-      customerPhone: '(11) 99999-7890',
-      address: 'Rua do Comércio, 890 - Industrial',
-      bottles: { quantity: 6, size: '20L' },
-      status: 'pending',
-      priority: 'medium',
-      estimatedTime: '11:00',
-      routeName: 'Rota D - Industrial'
-    },
-    {
-      id: 'del-005',
-      orderId: 'PED-2024-005',
-      orderCode: 'SCT005',
-      customerName: 'Luciana Ferreira',
-      customerPhone: '(11) 99999-2468',
-      address: 'Rua das Palmeiras, 456 - Jardim',
-      bottles: { quantity: 2, size: '10L' },
-      status: 'pending',
-      priority: 'low',
-      estimatedTime: '14:00',
-      routeName: 'Rota C - Jardim'
-    }
-  ];
-
-  const completedDeliveries: Delivery[] = [
-    {
-      id: 'del-comp-001',
-      orderId: 'PED-2024-100',
-      orderCode: 'SCT100',
-      customerName: 'Carlos Oliveira',
-      customerPhone: '(11) 99999-9012',
-      address: 'Rua Nova, 789 - Centro',
-      bottles: { quantity: 1, size: '10L' },
-      status: 'completed',
-      priority: 'low',
-      estimatedTime: '10:00',
-      completedAt: '2024-01-24 10:15:00',
-      routeName: 'Rota A - Centro'
-    },
-    {
-      id: 'del-comp-002',
-      orderId: 'PED-2024-101',
-      orderCode: 'SCT101',
-      customerName: 'Sandra Pereira',
-      customerPhone: '(11) 99999-1111',
-      address: 'Av. Comercial, 555 - Industrial',
-      bottles: { quantity: 3, size: '20L' },
-      status: 'completed',
-      priority: 'medium',
-      estimatedTime: '08:30',
-      completedAt: '2024-01-24 08:45:00',
-      routeName: 'Rota D - Industrial'
-    },
-    {
-      id: 'del-comp-003',
-      orderId: 'PED-2024-102',
-      orderCode: 'SCT102',
-      customerName: 'Paulo Henrique',
-      customerPhone: '(11) 99999-2222',
-      address: 'Rua Verde, 321 - Jardim',
-      bottles: { quantity: 2, size: '20L' },
-      status: 'completed',
-      priority: 'high',
-      estimatedTime: '13:00',
-      completedAt: '2024-01-24 13:20:00',
-      routeName: 'Rota C - Jardim'
-    }
-  ];
-
-
-
-
-
-  const formatCompletedTime = (timestamp: string) => {
+  const formatCompletedTime = (timestamp?: string) => {
+    if (!timestamp) return '--:--';
     const date = new Date(timestamp);
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
@@ -227,17 +184,6 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
                 )}
               </div>
             </div>
-            <div className="flex flex-col space-y-1 items-end">
-              <div className="flex items-center space-x-1">
-                <Clock className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">
-                  {showCompleted && delivery.completedAt
-                    ? formatCompletedTime(delivery.completedAt)
-                    : delivery.estimatedTime
-                  }
-                </span>
-              </div>
-            </div>
           </div>
         </CardHeader>
 
@@ -269,12 +215,12 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
             </div>
           )}
 
-          {showCompleted && delivery.completedAt && (
+          {showCompleted && statusData?.timestamp && (
             <div className="pt-2 border-t rounded-lg p-2.5 -mx-2 -mb-2" style={{ background: 'linear-gradient(135deg, rgba(0, 128, 0, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)' }}>
               <div className="flex items-center justify-center space-x-2">
                 <CheckCircle className="w-4 h-4" style={{ color: '#008000' }} />
                 <span className="text-sm" style={{ color: '#006600' }}>
-                  Concluída em {formatCompletedTime(delivery.completedAt)}
+                  Concluída em {formatCompletedTime(statusData.timestamp)}
                 </span>
               </div>
             </div>
@@ -284,13 +230,51 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-4 space-y-4 pb-20">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 flex flex-col items-center justify-center h-[calc(100vh-100px)] text-center space-y-4">
+        <AlertCircle className="w-12 h-12 text-red-500" />
+        <h2 className="text-xl font-semibold text-gray-900">Erro ao carregar entregas</h2>
+        <p className="text-gray-500 max-w-xs">{error}</p>
+        <Button onClick={() => rotaId && loadClientesRota(rotaId)} variant="outline" className="gap-2">
+          <RefreshCw className="w-4 h-4" /> Tentar Novamente
+        </Button>
+      </div>
+    );
+  }
+
+  // Se não houver rota selecionada nem carregando
+  // if (!rotaAtual && clientesRota.length === 0) {
+  //   return (
+  //     <div className="p-4 flex flex-col items-center justify-center h-[calc(100vh-100px)] text-center space-y-4">
+  //       <MapPin className="w-12 h-12 text-gray-400" />
+  //       <h2 className="text-xl font-semibold text-gray-900">Nenhuma rota selecionada</h2>
+  //       <p className="text-gray-500 max-w-xs">Selecione uma rota na tela anterior para ver as entregas.</p>
+  //     </div>
+  //   )
+  // }
+
   return (
     <div className="p-4 space-y-4 pb-20">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Minha Rota</h1>
+        <h1 className="text-2xl font-semibold">{rotaAtual ? rotaAtual.nome : 'Minha Rota'}</h1>
         <p className="text-sm text-muted-foreground">
-          Acompanhe seus clientes programados para hoje
+          {rotaAtual?.frequencia || 'Acompanhe seus clientes programados'}
         </p>
       </div>
 
@@ -318,7 +302,7 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
           <CardContent className="p-4">
             <div className="space-y-1">
               <p className="text-2xl" style={{ color: '#06b6d4' }}>
-                {todayDeliveries.reduce((total, d) => total + d.bottles.quantity, 0)}
+                {allDeliveries.reduce((total, d) => total + d.bottles.quantity, 0)}
               </p>
               <p className="text-xs text-muted-foreground">Garrafas</p>
             </div>
@@ -356,16 +340,10 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
             <>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm text-muted-foreground">
-                  {todayDeliveries.filter(d => d.priority === 'high').length} urgentes • {' '}
-                  {todayDeliveries.filter(d => d.priority === 'medium').length} normais • {' '}
-                  {todayDeliveries.filter(d => d.priority === 'low').length} baixa prioridade
+                  Listando {todayDeliveries.length} clientes
                 </p>
               </div>
               {todayDeliveries
-                .sort((a, b) => {
-                  const priorityOrder = { high: 3, medium: 2, low: 1 };
-                  return priorityOrder[b.priority] - priorityOrder[a.priority];
-                })
                 .map(delivery => renderDeliveryCard(delivery))
               }
             </>
@@ -393,7 +371,12 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery }: Deliv
                 </p>
               </div>
               {completedDeliveries
-                .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
+                .sort((a, b) => {
+                  const tsA = deliveryStatuses[a.id]?.timestamp;
+                  const tsB = deliveryStatuses[b.id]?.timestamp;
+                  if (tsA && tsB) return new Date(tsB).getTime() - new Date(tsA).getTime();
+                  return 0;
+                })
                 .map(delivery => renderDeliveryCard(delivery, true))
               }
             </>
