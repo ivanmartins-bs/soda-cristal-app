@@ -27,8 +27,8 @@ export interface Cliente {
     latitude?: string;
     longitude?: string;
     // Perfil comercial
-    revendedor_agua: boolean;
-    revendedor_xarope: boolean;
+    revendedor_agua: boolean | string;
+    revendedor_xarope: boolean | string;
     cf_agua: boolean;
     cf_xarope: boolean;
     precoespecial_agua: boolean;

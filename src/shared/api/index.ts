@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 import { API_CONFIG } from './config';
 
 const api = axios.create({
@@ -29,9 +30,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Se receber 401 (Unauthorized), o token pode ter expirado
+        // Se receber 401 (Unauthorized), o token pode ter expirado ou usuário inativo
         if (error.response?.status === 401) {
-            console.warn('⚠️ Token expirado ou inválido (401). Fazendo logout automático...');
+            const mensagemErro = error.response?.data?.message || 'Sua sessão expirou.';
+
+            // Exibe toast de erro para melhor UX
+            toast.error('Sessão Encerrada', {
+                description: `${mensagemErro}. Redirecionando...`,
+                duration: 4000,
+            });
+
+            console.warn('⚠️ 401 Unauthorized:', mensagemErro);
 
             // Limpa o localStorage
             localStorage.removeItem('auth_token');
@@ -39,9 +48,10 @@ api.interceptors.response.use(
             localStorage.removeItem('distribuidorId');
             localStorage.removeItem('user');
 
-            // Redireciona para a tela de login
-            // Nota: Isso funcionará se a aplicação verificar isLoggedIn no próximo render
-            window.location.href = '/login';
+            // Aguarda brevemente o usuário ler o toast antes de redirecionar
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
         }
 
         return Promise.reject(error);

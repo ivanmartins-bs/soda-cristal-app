@@ -31,7 +31,6 @@ export const userService = {
         const userStr = localStorage.getItem('user');
 
 
-
         if (!vendedorIdStr || !userStr) {
             throw new Error('Dados de autenticação não encontrados');
         }

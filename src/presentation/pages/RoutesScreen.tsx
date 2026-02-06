@@ -65,14 +65,21 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
   ];
 
   // Adapter para converter Rota do domínio para o formato UI
-  const mappedRoutes: RouteUI[] = rotas.map(rota => ({
+  const mappedRoutes: RouteUI[] = rotas.length > 0 ? rotas.map(rota => ({
     ...rota,
-    pendingDeliveries: 0, // Mockado por enquanto
+    pendingDeliveries: 0, // Mockado por enquanto - API não retorna count ainda
     priority: 'medium',   // Mockado por enquanto
-    status: rota.checkin_fechado ? 'completed' : 'pending' // Inferido
-  }));
+    status: rota.checkin_fechado ? 'completed' : 'pending'
+  })) : mockRoutes;
 
-  const displayRoutes = mappedRoutes.length > 0 ? mappedRoutes : mockRoutes;
+  const displayRoutes = mappedRoutes.sort((a, b) => {
+    // 1. Status: Pendente/Em Andamento antes de Concluído
+    if (a.status !== 'completed' && b.status === 'completed') return -1;
+    if (a.status === 'completed' && b.status !== 'completed') return 1;
+
+    // 2. Ordem alfabética ou Numérica (caso o nome seja número)
+    return a.nome.localeCompare(b.nome, undefined, { numeric: true });
+  });
 
   const filteredRoutes = displayRoutes.filter(route =>
     route.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
