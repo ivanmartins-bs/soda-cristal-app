@@ -48,6 +48,7 @@ export default defineConfig({
       '@radix-ui/react-accordion@1.2.3': '@radix-ui/react-accordion',
       '@': path.resolve(__dirname, './src'),
     },
+  }
     build: {
       target: 'esnext',
       outDir: 'dist',
