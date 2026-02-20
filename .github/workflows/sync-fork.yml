@@ -1,0 +1,20 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'
+  workflow_dispatch:  # Permite rodar manual
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sync Fork
+      uses: tgymnich/fork-sync@v1.8
+      with:
+        github_token: ${{ secrets.PAT_TOKEN }}
+        upstream_owner: ByStartup-Desenvolvimento  
+        upstream_repo: soda-cristal-app
+        upstream_branch: main
+        downstream_branch: main
+        force_fork: true  
