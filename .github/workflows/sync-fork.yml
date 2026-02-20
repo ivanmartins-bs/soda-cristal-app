@@ -3,7 +3,7 @@ name: Sync Fork
 on:
   schedule:
     - cron: '0 */12 * * *'
-  workflow_dispatch:  # Permite rodar manual
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -12,9 +12,7 @@ jobs:
     - name: Sync Fork
       uses: tgymnich/fork-sync@v1.8
       with:
-        github_token: ${{ secrets.PAT_TOKEN }}
-        upstream_owner: ByStartup-Desenvolvimento  
-        upstream_repo: soda-cristal-app
-        upstream_branch: main
-        downstream_branch: main
-        force_fork: true  
+        token: ${{ secrets.PAT_TOKEN }}
+        owner: ByStartup-Desenvolvimento
+        base: main
+        head: main
