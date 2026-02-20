@@ -4,7 +4,7 @@ import { Badge } from '../../shared/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { Button } from '../../shared/ui/button';
-import { CheckCircle, MapPin, Droplets, Phone, Calendar, DollarSign, UserX, AlertCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle, MapPin, Droplets, Phone, Calendar, DollarSign, UserX, AlertCircle, RefreshCw, Clock } from 'lucide-react';
 import { useRotasStore } from '../../domain/rotas/rotasStore';
 import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
 import { RotaEntregaCompleta, PrioridadeCliente } from '../../domain/rotas/models';
@@ -163,7 +163,7 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery, vendedo
                 <span>•</span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {showCompleted ? 'Finalizado' : delivery.estimatedTime}
+                  Hoje
                 </span>
                 {delivery.priority === 'high' && !showCompleted && (
                   <Badge variant="destructive" className="ml-1 text-xs px-1">Prioridade</Badge>
@@ -181,6 +181,12 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectDelivery, vendedo
                     )}
                   </>
                 )}
+              </div>
+            </div>
+            <div className="flex flex-col space-y-1 items-end">
+              <div className="flex items-center space-x-1">
+                <Clock className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">{delivery.estimatedTime}</span>
               </div>
             </div>
           </div>
