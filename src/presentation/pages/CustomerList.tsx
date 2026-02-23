@@ -20,12 +20,14 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
 
   const { clientes, loadClientes, isLoading } = useClientesStore();
   let { vendedorId } = useUserStore();
+  let { distribuidorId } = useUserStore();
+  console.log(distribuidorId);
 
   useEffect(() => {
-    if (vendedorId) {
-      loadClientes(vendedorId);
+    if (distribuidorId) {
+      loadClientes(distribuidorId);
     }
-  }, [loadClientes, vendedorId]);
+  }, [loadClientes, distribuidorId]);
 
   // Mock data de clientes (Fallback)
   const mockCustomers = [
@@ -70,14 +72,14 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
   const rawData = hasRealClients ? clientes : mockCustomers;
 
   // Normaliza os dados para o formato da UI
-  const displayCustomers = rawData.map(c => {
+  const displayCustomers = rawData.map(cast => {
     // Verifica se é um cliente real (tem as props do model) ou mock (tem props da UI)
-    const isReal = 'ativo' in c;
+    const isReal = 'ativo' in cast;
 
     if (isReal) {
       // Mapping Real -> UI
       // TODO: Ajustar model para garantir que campos existem ou formatters tratem undefined
-      const realClient = c as any; // Cast rápido pois Model x UI tem divergências que estamos tratando aqui
+      const realClient = cast as any; // Cast rápido pois Model x UI tem divergências que estamos tratando aqui
       return {
         id: realClient.id,
         name: realClient.nome || realClient.razaosocial || 'Sem Nome',
@@ -92,7 +94,7 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
       };
     } else {
       // Mock já está no formato UI
-      return c;
+      return cast;
     }
   });
 
@@ -102,6 +104,9 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
     customer.phone.includes(searchTerm) ||
     customer.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  console.log(filteredCustomers.length);
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -134,7 +139,7 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" size="icon" onClick={() => loadClientes(Number(vendedorId))} disabled={isLoading}>
+          <Button variant="outline" size="icon" onClick={() => loadClientes(distribuidorId || vendedorId || 0)} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
           <Button onClick={onAddCustomer} className="bg-blue-600 hover:bg-blue-700">

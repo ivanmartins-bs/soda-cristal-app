@@ -4,13 +4,20 @@ import { Clientes, ClienteCadastroPayload, CadastroContratosPayload } from './mo
 import { Venda } from '../vendas/model';
 
 export const clientesServices = {
-    async getClientesXarope(vendedorId: number): Promise<Clientes[]> {
+    async getClientesXarope(vendedorId?: number): Promise<Clientes[]> {
         // Busca Clientes e Vendas em Paralelo
-        const [clientes, vendasVendedor, vendasPendentes] = await Promise.all([
+        // Se não houver vendedorId (ex: modo distribuidor), não buscamos histórico de vendas para evitar erro 500
+        const promises: [Promise<Clientes[]>, Promise<Venda[]>, Promise<Venda[]>] = [
             clientesService.getClientesXarope(),
-            vendasService.getVendasVendedor(vendedorId).catch(() => [] as Venda[]), // Fallback para array vazio em caso de erro
-            vendasService.getVendasPendentes(vendedorId).catch(() => [] as Venda[])
-        ]);
+            (vendedorId && vendedorId > 1)
+                ? vendasService.getVendasVendedor(vendedorId).catch(() => [] as Venda[])
+                : Promise.resolve([] as Venda[]),
+            (vendedorId && vendedorId > 1)
+                ? vendasService.getVendasPendentes(vendedorId).catch(() => [] as Venda[])
+                : Promise.resolve([] as Venda[])
+        ];
+
+        const [clientes, vendasVendedor, vendasPendentes] = await Promise.all(promises);
 
         // Unifica todas as vendas para busca relacional
         const todasVendas = [...vendasVendedor, ...vendasPendentes];
