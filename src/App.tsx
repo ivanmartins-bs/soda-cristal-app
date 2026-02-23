@@ -60,7 +60,7 @@ export default function App() {
                   setSelectedDelivery(delivery);
                   setSelectedRoute({
                     id: `route-${delivery.routeName}`,
-                    name: delivery.routeName || "Rota Individual",
+                    name: delivery.routeName || "Rota",
                     zone:
                       delivery.address.split(" - ")[1] ||
                       "Zona não especificada",

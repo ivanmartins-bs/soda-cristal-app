@@ -207,19 +207,21 @@ export function RoutesScreen({ onSelectRoute }: RoutesScreenProps) {
         ))}
       </div>
 
-      {filteredRoutes.length === 0 && (
-        <Card className="text-center py-8">
-          <CardContent>
-            <div className="space-y-2">
-              <Route className="w-12 h-12 text-muted-foreground mx-auto" />
-              <h3 className="text-lg font-medium">Nenhuma rota encontrada</h3>
-              <p className="text-sm text-muted-foreground">
-                Tente ajustar sua busca ou aguarde novas rotas serem disponibilizadas
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+      {
+        filteredRoutes.length === 0 && (
+          <Card className="text-center py-8">
+            <CardContent>
+              <div className="space-y-2">
+                <Route className="w-12 h-12 text-muted-foreground mx-auto" />
+                <h3 className="text-lg font-medium">Nenhuma rota encontrada</h3>
+                <p className="text-sm text-muted-foreground">
+                  Tente ajustar sua busca ou aguarde novas rotas serem disponibilizadas
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      }
+    </div >
   );
 }
