@@ -41,18 +41,23 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
   const [isLoading, setIsLoading] = useState(true);
 
   const { vendedorId, distribuidorId } = useUserStore(useShallow(state => ({
+
     vendedorId: state.vendedorId,
     distribuidorId: state.distribuidorId
   })));
 
   useEffect(() => {
     const loadData = async () => {
-      if (!vendedorId) return;
+      if (!distribuidorId) return;
 
       try {
         //TODO: remover quando tiver o vendedorId apos entender como usa a URL de produtos
-        let vendedorId = 123
-        const produtosData = await produtosService.getProdutos(vendedorId);
+        let distribuidorIdNormalized = Number(distribuidorId + "0")
+        const produtosData = await produtosService.getProdutos(distribuidorIdNormalized);
+        console.log(distribuidorIdNormalized);
+        console.log(produtosData);
+
+
         setProdutos(produtosData);
 
         if (distribuidorId) {
@@ -330,6 +335,7 @@ export function PDVStandalone({ delivery, customerName: propCustomerName, onBack
         {filteredProducts.map((product) => {
           const quantityInCart = getCartItemQuantity(product.id);
           const price = getProductPrice(product);
+          console.log(product);
 
           return (
             <Card key={product.id} className="hover:shadow-md transition-shadow">

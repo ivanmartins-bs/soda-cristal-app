@@ -10,7 +10,7 @@ interface ClientesState {
     filteredClientes: Clientes[];
     filtraClientes: (termo: string) => void;
 
-    loadClientes: (vendedorId: number) => Promise<void>;
+    loadClientes: (id?: number) => Promise<void>;
     cadastrarCliente: (payload: import('./model').ClienteCadastroPayload) => Promise<boolean>; // Nova action
     clearError: () => void;
 }
@@ -22,10 +22,10 @@ export const useClientesStore = create<ClientesState>((set, get) => ({
     isSubmitting: false,
     error: null,
 
-    loadClientes: async (vendedorId: number) => {
+    loadClientes: async (id?: number) => {
         set({ isLoading: true, error: null });
         try {
-            const clientes = await clientesServices.getClientesXarope(vendedorId);
+            const clientes = await clientesServices.getClientesXarope(id);
             set({ clientes, filteredClientes: clientes, isLoading: false });
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : 'Erro ao carregar clientes';
