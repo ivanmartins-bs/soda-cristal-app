@@ -1,17 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '../../shared/ui/sheet';
+import { Skeleton } from '../../shared/ui/skeleton';
 import { ArrowLeft, MapPin, Droplets, Phone, Clock, CheckCircle, ShoppingCart, UserX, AlertCircle, DollarSign, Calendar } from 'lucide-react';
-import { formatPhone } from '@/shared/utils/formatters';
+import { formatPhone, formatApiDate } from '@/shared/utils/formatters';
 
 import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
+import { useRotasStore } from '../../domain/rotas/rotasStore';
+import { rotasService } from '../../domain/rotas/services';
+import { RotaEntregaCompleta, PrioridadeCliente } from '../../domain/rotas/models';
 
 interface Route {
   id: string;
-  name: string;
+  nome: string;
   zone: string;
+  frequencia: string;
   pendingDeliveries?: number;
   priority?: 'high' | 'medium' | 'low';
   status?: 'pending' | 'in-progress' | 'completed';
@@ -28,12 +33,69 @@ interface RouteDetailsProps {
 
 export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpenPDV }: RouteDetailsProps) {
   const [_selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  const { loadClientesRota, clientesRota, isLoading } = useRotasStore();
+
+  useEffect(() => {
+    if (route && (!route.deliveries || route.deliveries.length === 0)) {
+      // route.id pode vir como string ou number dependendo da origem
+      loadClientesRota(Number(route.id));
+    }
+  }, [route?.id, route?.deliveries, loadClientesRota]);
+
+  const mapPrioridade = (prioridade: PrioridadeCliente): 'high' | 'medium' | 'low' => {
+    switch (prioridade) {
+      case 'urgente': return 'high';
+      case 'normal': return 'medium';
+      case 'baixa': return 'low';
+      default: return 'medium';
+    }
+  };
+
+  const mapClienteToDelivery = (item: RotaEntregaCompleta): Delivery => {
+    return {
+      id: item.rotaentrega.id.toString(),
+      orderId: `PED-${item.rotaentrega.id}`,
+      orderCode: `SCT-${item.cliente.id}`,
+      customerName: item.cliente.nome,
+      customerPhone: item.cliente.celular || item.cliente.celular2 || '',
+      address: `${item.cliente.rua}, ${item.cliente.numero} - ${item.cliente.bairro}`,
+      bottles: {
+        quantity: item.rotaentrega.num_garrafas || 0,
+        size: '20L'
+      },
+      status: 'pending',
+      priority: mapPrioridade(rotasService.calcularPrioridade(item)),
+      estimatedTime: formatApiDate(new Date()),
+      routeName: item.rota.nome,
+      notes: item.cliente.observacao,
+      latitude: item.cliente.latitude,
+      longitude: item.cliente.longitude,
+    };
+  };
+
+  const deliveries = useMemo(() => {
+    if (route?.deliveries && route.deliveries.length > 0) {
+      return route.deliveries;
+    }
+    return clientesRota.map(mapClienteToDelivery);
+  }, [route?.deliveries, clientesRota]);
 
   if (!route) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center h-screen space-y-4">
         <p className="text-muted-foreground">Nenhuma rota selecionada.</p>
-        <Button onClick={onBack} variant="link">Voltar</Button>
+        <Button onClick={onBack} variant="outline">Voltar para Início</Button>
+      </div>
+    );
+  }
+
+  if (isLoading && deliveries.length === 0) {
+    return (
+      <div className="p-4 space-y-4">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
       </div>
     );
   }
@@ -80,9 +142,6 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
     }
   };
 
-  // Usa as entregas reais passadas via route.deliveries
-  const deliveries = route.deliveries ?? [];
-
   // Uma entrega é "pendente" se não tiver checkInStatus registrado
   const pendingDeliveries = deliveries.filter(d => !deliveryStatuses[d.id]?.checkInStatus);
   const completedDeliveries = deliveries.filter(d => !!deliveryStatuses[d.id]?.checkInStatus);
@@ -110,8 +169,8 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl" style={{ color: '#008000' }}>Rota: {route.name}</h1>
-            <p className="text-sm text-muted-foreground">{route.zone}</p>
+            <h1 className="text-xl" style={{ color: '#008000' }}>Rota: {route.nome}</h1>
+            <p className="text-sm text-muted-foreground">{route.frequencia}</p>
           </div>
           <Badge variant="outline" className="shadow-sm" style={{ color: '#008000', borderColor: 'rgba(0, 128, 0, 0.3)' }}>
             {pendingDeliveries.length} pendentes
@@ -181,8 +240,9 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
                         </CardTitle>
                       </div>
                       <div className="flex items-center space-x-2 flex-wrap gap-1 text-sm text-muted-foreground ml-8">
-                        <span className="font-medium text-green-700">{route.name}</span>
-                        <span>•</span>
+                        <span className="font-medium text-green-700">{route.nome}</span>
+                        <span className="font-medium text-green-700">-</span>
+                        <span className="font-medium text-green-700">{route.frequencia}</span>
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           Hoje
