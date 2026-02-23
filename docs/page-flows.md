@@ -1,7 +1,7 @@
 # Fluxos de Páginas — Soda Cristal App
 
 > Documento gerado a partir da análise de `src/presentation/pages` e `App.tsx`.
-> Última atualização: 12/02/2026
+> Última atualização: 20/02/2026
 
 ---
 
@@ -27,10 +27,11 @@ flowchart TD
         Contracts["/contracts — PendingContracts"]
         Dashboard["/dashboard — Dashboard"]
 
-        Deliveries -->|selecionar entrega| RouteDetails
+        Deliveries -->|"selecionar cliente (onSelectDelivery)"| RouteDetails
         Routes -->|selecionar rota| RouteDetails
-        RouteDetails -->|check-in| CheckIn
-        RouteDetails -->|abrir PDV| PDVDelivery
+        RouteDetails -->|"Fazer Check-in (Sheet)"| CheckIn
+        RouteDetails -->|"Abrir PDV (Sheet)"| PDVDelivery
+        RouteDetails -->|"Traçar Rota no GPS (externo)"| GoogleMaps["Google Maps (externo)"]
         CheckIn -->|houve venda| PDVDelivery
         CheckIn -->|sem venda| RouteDetails
 
@@ -66,10 +67,35 @@ flowchart TD
 
 | Rota | Página | Ação |
 |------|--------|------|
-| `/deliveries` | [DeliveriesOverview.tsx](file:///c:/bystartup/soda-app/src/presentation/pages/DeliveriesOverview.tsx) | Lista entregas. Selecionar → `/routes/details` |
-| `/routes/details` | [RouteDetails.tsx](file:///c:/bystartup/soda-app/src/presentation/pages/RouteDetails.tsx) | Detalhes. **Check-in** → `/checkin`, **PDV** → `/pdv/delivery` |
+| `/deliveries` | [DeliveriesOverview.tsx](file:///c:/bystartup/soda-app/src/presentation/pages/DeliveriesOverview.tsx) | Lista entregas da rota do dia. Selecionar cliente → `/routes/details` |
+| `/routes/details` | [RouteDetails.tsx](file:///c:/bystartup/soda-app/src/presentation/pages/RouteDetails.tsx) | Detalha todos os clientes da rota. Ações via Sheet: **Check-in** → `/checkin`, **PDV** → `/pdv/delivery`. Botão GPS abre Google Maps. |
 | `/checkin` | [CheckInScreen.tsx](file:///c:/bystartup/soda-app/src/presentation/pages/CheckInScreen.tsx) | Check-in. Com venda → `/pdv/delivery`, sem venda → `/routes/details` |
 | `/pdv/delivery` | [PDVStandalone.tsx](file:///c:/bystartup/soda-app/src/presentation/pages/PDVStandalone.tsx) | PDV contextual. Voltar → `/routes/details` |
+
+#### DeliveriesOverview — Detalhes de Implementação
+
+- **Fonte de dados**: `useRotasStore` → `loadTodaysRoutes(vendedorId)` — dados reais da API.
+- **Adapter interno**: `mapClienteToDelivery(RotaEntregaCompleta → Delivery)` converte o modelo de domínio `rotas` para o modelo `deliveries` usado na UI. Inclui `latitude` e `longitude` do cliente.
+- **Tabs**:
+  - `Rota de Hoje` — clientes **sem** `checkInStatus` registrado (pendentes).
+  - `Realizados` — clientes **com** `checkInStatus`, ordenados do mais recente.
+- **Cards de resumo**: contagem de Clientes pendentes, Realizados e total de Garrafas.
+- **Click no card**: dispara `onSelectDelivery(delivery, routeDeliveries)` onde `routeDeliveries` são **todas as entregas da mesma rota** (`routeName`), permitindo que `RouteDetails` exiba a lista completa.
+- **Formatação**: telefone exibido via `formatPhone()` de `shared/utils/formatters`.
+- **Estados visuais do card**: badge colorido por `checkInStatus` (`delivered`, `no-sale`, `absent-return`, `absent-no-return`).
+
+#### RouteDetails — Detalhes de Implementação
+
+- **Fonte de dados**: `route.deliveries` passado pelo componente pai (vem de `onSelectDelivery`). Não faz chamada de API direta.
+- **Enumeração**: cada card exibe o número de ordem (índice + 1) do cliente na rota.
+- **Botão "Traçar Rota no GPS"**: presente em todo card. Abre `Google Maps` via URL:
+  - Com `lat`/`lng` → `maps/dir/?destination=lat,lng`
+  - Sem coordenadas → `maps/search/?query=endereço` (fallback por texto)
+- **Ações do Cliente** (Bottom Sheet — `<Sheet side="bottom">`): exibido apenas para clientes **sem** `checkInStatus`. Contém:
+  - **Fazer Check-in** → chama `onCheckIn(delivery)` → navega para `/checkin`
+  - **Abrir PDV** → chama `onOpenPDV(delivery)` → navega para `/pdv/delivery`
+- **Formatação**: telefone exibido via `formatPhone()` de `shared/utils/formatters`.
+- **Clientes concluídos**: exibem badge do status (cor e ícone) no lugar do Sheet de ações.
 
 ---
 
@@ -82,7 +108,7 @@ flowchart TD
 | `/routes` | [RoutesScreen.tsx](file:///c:/bystartup/soda-app/src/presentation/pages/RoutesScreen.tsx) | Lista rotas. Selecionar → `/routes/details` |
 
 > [!NOTE]
-> `RouteDetails` detecta a origem (entrega individual vs. rota completa) para decidir o destino do botão "voltar".
+> `RouteDetails` detecta a origem (entrega individual via `DeliveriesOverview` vs. rota completa via `RoutesScreen`) para decidir o destino do botão "voltar".
 
 ---
 

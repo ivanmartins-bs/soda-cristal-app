@@ -59,6 +59,26 @@ trigger: always_on
 
 ## Workflow com o agente
 
+O workflow é dividido em **dois estágios obrigatórios** com skills especializados:
+
+### Estágio 1 — Planejamento com `project-architect`
+
+Use o skill `.agent/SKILLS/project-architect` para:
+- Entender o requisito e identificar domínios impactados.
+- Propor a estrutura completa: pastas, nomes de arquivos, interfaces e integração.
+- Verificar domínios, endpoints e componentes UI já existentes.
+- Gerar a proposta em markdown para aprovação do usuário.
+
+> **Nunca inicie a implementação sem a aprovação da proposta do arquiteto.**
+
+### Estágio 2 — Implementação com `feature-implementor`
+
+Após aprovação da proposta, use o skill `.agent/SKILLS/feature-implementor` para:
+- Implementar o código **de baixo para cima** (endpoints → domain → store → presentation).
+- Respeitar rigorosamente as regras de camada e convenções do projeto.
+- Reportar ao usuário os arquivos criados/modificados e pontos de atenção.
+
+### Regras gerais
 - Antes de gerar código, sempre indicar:
   - Qual domínio está sendo impactado (`domain/users`, `domain/auth`, etc.).
   - Quais arquivos em `presentation` serão criados/alterados.
