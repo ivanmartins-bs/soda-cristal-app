@@ -16,3 +16,4 @@ jobs:
         owner: ByStartup-Desenvolvimento
         base: main
         head: main
+        ignore_fail: true
