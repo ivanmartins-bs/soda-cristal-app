@@ -48,7 +48,7 @@ export const clientesServices = {
                     proxima_entrega: cliente.proxima_entrega || 'Não temos proxima entrega',
 
                     tipo_contrato: cliente.tipo_contrato || (cliente.observacao?.includes('Semanal') ? 'Comodato Semanal' : 'Comodato Quinzenal'),
-                    produto_preferido: cliente.produto_preferido || (cliente.cf_agua ? 'Água com Gás 20L' : 'Xarope de Cola'),
+                    produto_preferido: cliente.produto_preferido || (cliente.cf_agua ? 'Água com Gás 1,5 L' : 'Xarope de Cola'),
                 };
             });
     },
