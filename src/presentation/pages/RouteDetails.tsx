@@ -34,7 +34,6 @@ interface RouteDetailsProps {
 export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpenPDV }: RouteDetailsProps) {
   const [_selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
   const { loadClientesRota, clientesRota, isLoading } = useRotasStore();
-  console.log(route);
 
   useEffect(() => {
     if (route && (!route.deliveries || route.deliveries.length === 0)) {
@@ -147,7 +146,6 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
   // Uma entrega é "pendente" se não tiver checkInStatus registrado
   const pendingDeliveries = deliveries.filter(d => !deliveryStatuses[d.id]?.checkInStatus);
   const completedDeliveries = deliveries.filter(d => !!deliveryStatuses[d.id]?.checkInStatus);
-  console.log(deliveries);
 
   const openGPS = (delivery: Delivery) => {
     if (delivery.latitude && delivery.longitude) {

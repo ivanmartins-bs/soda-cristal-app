@@ -195,11 +195,10 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
             <div key={rota.id} className="space-y-0">
               {/* Card da Rota */}
               <Card
-                className={`cursor-pointer transition-all duration-200 border-2 hover:shadow-md ${
-                  isExpanded
-                    ? 'border-green-400 shadow-md rounded-b-none'
-                    : 'hover:scale-[1.01]'
-                }`}
+                className={`cursor-pointer transition-all duration-200 border-2 hover:shadow-md ${isExpanded
+                  ? 'border-green-400 shadow-md rounded-b-none'
+                  : 'hover:scale-[1.01]'
+                  }`}
                 style={{
                   borderColor: isExpanded ? 'rgba(0, 128, 0, 0.4)' : 'rgba(0, 128, 0, 0.15)',
                 }}
@@ -286,7 +285,7 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end space-y-1">
+                              <div className="flex flex-end flex-col items-end space-y-1">
                                 <Badge variant="outline" className={getStatusColor(cliente.ativo)}>
                                   {cliente.ativo === 1 ? 'ativo' : 'inativo'}
                                 </Badge>
@@ -307,7 +306,7 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
                             </div>
 
                             {/* Endereço */}
-                            <div className="flex items-center space-x-2 mb-2">
+                            <div className="flex items-center space-x-2 mb-2 mt-10">
                               <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                               <span className="text-sm text-muted-foreground">
                                 {cliente.rua}, {cliente.numero} - {cliente.bairro}
@@ -365,7 +364,7 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
                               >
                                 Ver Histórico
                               </Button>
-                              <Button
+                              {/* <Button className="!hidden"
                                 variant="outline"
                                 size="sm"
                                 onClick={(e) => {
@@ -374,7 +373,7 @@ export function CustomerList({ onAddCustomer, onViewContracts: _onViewContracts,
                                 }}
                               >
                                 Editar
-                              </Button>
+                              </Button> */}
                             </div>
                           </div>
                         );
