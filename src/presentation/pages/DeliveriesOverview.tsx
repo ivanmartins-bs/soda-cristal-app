@@ -58,6 +58,7 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectRoute, vendedorId
   const mapClienteToDelivery = (item: RotaEntregaCompleta): Delivery => {
     return {
       id: item.rotaentrega.id.toString(), // ID único da entrega na rota
+      clienteId: item.cliente.id,
       orderId: `PED-${item.rotaentrega.id}`,
       orderCode: `SCT-${item.cliente.id}`,
       customerName: item.cliente.nome,
@@ -74,8 +75,8 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectRoute, vendedorId
       notes: item.cliente.observacao,
       latitude: item.cliente.latitude,
       longitude: item.cliente.longitude,
-      diasSemAtendimento: item.diassematendimento?.length || 0,
-      diasSemConsumo: item.diassemconsumo?.length || 0,
+      diasSemAtendimento: Number(item.diassematendimento) || 0,
+      diasSemConsumo: Number(item.diassemconsumo) || 0,
     };
   };
 
