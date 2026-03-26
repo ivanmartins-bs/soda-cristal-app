@@ -2,18 +2,19 @@ name: Sync Fork
 
 on:
   schedule:
-    - cron: '0 */12 * * *'
-  workflow_dispatch:
+    - cron: '0 */12 * * *' # Sincroniza a cada 12 horas
+  workflow_dispatch:      # Permite rodar manualmente clicando no botão
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permissão necessária para gravar as mudanças no seu repo
     steps:
-    - name: Sync Fork
-      uses: tgymnich/fork-sync@v1.8
-      with:
-        token: ${{ secrets.PAT_TOKEN }}
-        owner: ByStartup-Desenvolvimento
-        base: main
-        head: main
-        ignore_fail: true
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      
+      - name: Sync with Upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh repo sync ByStartup-Desenvolvimento/soda-cristal-app --branch main
