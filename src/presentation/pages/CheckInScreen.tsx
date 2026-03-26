@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { checkInService } from '../../domain/checkin/services';
 import { CheckInStatus } from '../../domain/deliveries/models';
 import { formatApiDate } from '../../shared/utils/formatters';
+import { calculateDistance } from '../../shared/utils/location';
 
 
 
@@ -61,6 +62,30 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
       const rotaEntregaId = parseInt(String(delivery.id).replace('del-', '')) || 0;
       const [lat, lng] = currentLocation.split(', ');
       const nowFormatted = formatApiDate(new Date());
+
+      // Validação de Geofencing (Raio de 50 metros)
+      if (delivery.latitude && delivery.longitude) {
+        const destLat = parseFloat(delivery.latitude);
+        const destLng = parseFloat(delivery.longitude);
+        const userLat = parseFloat(lat);
+        const userLng = parseFloat(lng);
+
+        if (!isNaN(destLat) && !isNaN(destLng)) {
+          const distance = calculateDistance(userLat, userLng, destLat, destLng);
+          
+          if (distance > 50) {
+            toast.error(
+              <div className="space-y-2">
+                <p className="font-bold text-red-700">Fora do Raio de Atendimento</p>
+                <p className="text-sm">Você está a {Math.round(distance)} metros do cliente.</p>
+                <p className="text-sm">O check-in só é permitido em um raio de 50 metros.</p>
+              </div>
+            );
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
 
       // Registro de presença (check-in inicial)
       await checkInService.registrarPresenca(

@@ -10,6 +10,7 @@ interface DeliveryState {
     setSelectedDelivery: (delivery: Delivery | null) => void;
     setSelectedRoute: (route: any | null) => void;
     updateDeliveryStatus: (id: string, status: DeliveryStatusData) => void;
+    resetDeliveryStatus: (id: string) => void;
     clearDeliveryStatuses: () => void;
 }
 
@@ -25,6 +26,11 @@ export const useDeliveryStore = create<DeliveryState>()(
             updateDeliveryStatus: (id, status) => set((state) => ({
                 deliveryStatuses: { ...state.deliveryStatuses, [id]: status }
             })),
+            resetDeliveryStatus: (id) => set((state) => {
+                const newStatuses = { ...state.deliveryStatuses };
+                delete newStatuses[id];
+                return { deliveryStatuses: newStatuses };
+            }),
             clearDeliveryStatuses: () => set({ deliveryStatuses: {} }),
         }),
         {

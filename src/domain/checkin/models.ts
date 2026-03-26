@@ -1,4 +1,7 @@
 
+
+export type MotivoDescarteLabel = 'Retorno' | 'Erro';
+
 export interface CheckInRequest {
     rota_entrega: number;
     cliente_id: number;
