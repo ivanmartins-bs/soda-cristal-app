@@ -1,6 +1,6 @@
 import { checkInApiService } from '../../shared/api/services/checkInServices';
 import { useDeliveryStore } from '../deliveries/deliveryStore';
-import { CheckInRequest } from './models';
+import { CheckInRequest, MotivoDescarteLabel } from './models';
 
 export const checkInService = {
     /**
@@ -34,6 +34,31 @@ export const checkInService = {
 
         } catch (error) {
             console.error('Erro ao realizar check-in:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Descarta um check-in realizado
+     */
+    async descartarCheckIn(vendedorId: number, rotaEntregaId: number, clienteId: number, motivo: MotivoDescarteLabel, data: string): Promise<void> {
+        try {
+            // Envia para a API com o campo observacao_descart preenchido
+            await checkInApiService.postCheckIn(vendedorId, {
+                rota_entrega: rotaEntregaId,
+                cliente_id: clienteId,
+                data_checkin: data,
+                vendedor: vendedorId,
+                observacao_descart: motivo,
+                observacao: `Check-in descartado: ${motivo}`,
+                dentro_raio: true
+            });
+
+            // Reseta o status na store local para permitir novo check-in
+            useDeliveryStore.getState().resetDeliveryStatus(`del-${rotaEntregaId}`);
+
+        } catch (error) {
+            console.error('Erro ao descartar check-in:', error);
             throw error;
         }
     },

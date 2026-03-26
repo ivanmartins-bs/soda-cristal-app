@@ -8,6 +8,7 @@ import { ArrowLeft, MapPin, Droplets, Phone, CheckCircle, ShoppingCart, UserX, A
 import { Input } from '../../shared/ui/input';
 import { ClienteEditSheet } from '../components/ClienteEditSheet';
 import { ClienteDesativarSheet } from '../components/ClienteDesativarSheet';
+import { CheckInDescarteSheet } from '../components/CheckInDescarteSheet';
 import { formatPhone, formatApiDate } from '@/shared/utils/formatters';
 
 import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
@@ -55,6 +56,8 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
     semAtendimento: false,
     semConsumo: false,
   });
+  const [descarteSheetOpen, setDescarteSheetOpen] = useState(false);
+  const [deliveryParaDescartar, setDeliveryParaDescartar] = useState<Delivery | null>(null);
   const { loadClientesRota, clientesRota, isLoading } = useRotasStore();
   console.log(clientesRota);
 
@@ -663,6 +666,18 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
                         {statusData?.hadSale && (
                           <span className="ml-2 text-xs">💰</span>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="ml-auto h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeliveryParaDescartar(delivery);
+                            setDescarteSheetOpen(true);
+                          }}
+                        >
+                          Descartar
+                        </Button>
                       </div>
                     </div>
                   )}
@@ -687,6 +702,16 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
         onOpenChange={setDesativarSheetOpen}
         cliente={clienteParaDesativar}
         onSaved={() => loadClientesRota(Number(route.id))}
+      />
+
+      {/* Sheet de Descarte de Check-in */}
+      <CheckInDescarteSheet
+        open={descarteSheetOpen}
+        onOpenChange={setDescarteSheetOpen}
+        deliveryId={deliveryParaDescartar?.id || ''}
+        clienteId={deliveryParaDescartar?.clienteId || 0}
+        customerName={deliveryParaDescartar?.customerName || ''}
+        onDiscarded={() => loadClientesRota(Number(route.id))}
       />
     </div>
   );
