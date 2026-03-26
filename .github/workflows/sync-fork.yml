@@ -2,19 +2,33 @@ name: Sync Fork
 
 on:
   schedule:
-    - cron: '0 */12 * * *' # Sincroniza a cada 12 horas
-  workflow_dispatch:      # Permite rodar manualmente clicando no botão
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Permissão necessária para gravar as mudanças no seu repo
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-      
-      - name: Sync with Upstream
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh repo sync ByStartup-Desenvolvimento/soda-cristal-app --branch main
+        with:
+          fetch-depth: 0 # Importante: pega todo o histórico para o merge funcionar
+
+      - name: Manual Git Sync
+        run: |
+          # Configura um usuário temporário para o Git
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          
+          # Adiciona o repositório original como 'upstream'
+          git remote add upstream https://github.com/ByStartup-Desenvolvimento/soda-cristal-app.git
+          
+          # Busca as atualizações e faz o merge
+          git fetch upstream main
+          git checkout main
+          git merge upstream/main --allow-unrelated-histories
+          
+          # Envia as atualizações de volta para o seu fork
+          git push origin main
