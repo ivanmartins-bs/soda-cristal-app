@@ -1,4 +1,4 @@
-
+import { CheckInStatus } from '../deliveries/models';
 
 export type MotivoDescarteLabel = 'Retorno' | 'Erro';
 
@@ -16,6 +16,7 @@ export interface CheckInRequest {
     quantidade_garrafas: number;
     quantidade_vendida: number;
     teve_venda: boolean; // Usado internamente para decidir se envia 1 ou 0
+    status?: CheckInStatus; 
     contas_receber?: {
         valor: string;
         parcelas: {

@@ -108,7 +108,7 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
   };
 
   const handleStatusSelection = (status: CheckInStatus) => {
-    if (status === 'delivered' || status === 'no-sale') {
+    if (status === 'delivered') {
       setSelectedStatus(status);
       // setShowSaleDecision(true);
       handleSaleDecision(true);
@@ -146,6 +146,7 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
         latitude: Number(lat),
         longitude: Number(lng),
         anotacoes: "",
+        status: status,
         quantidade_garrafas: delivery?.bottles?.quantity || 0,
         quantidade_vendida: status === 'delivered' ? (delivery?.bottles?.quantity || 1) : 0,
         teve_venda: hasSale
