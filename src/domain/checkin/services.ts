@@ -26,8 +26,8 @@ export const checkInService = {
             // 2. Atualizar o estado local (store)
             // Extraímos o status da observação ou mapeamos de volta se necessário
             // Por enquanto mantemos a lógica de UI baseada no que foi enviado
-            useDeliveryStore.getState().updateDeliveryStatus(`del-${request.rota_entrega}`, {
-                checkInStatus: request.quantidade_vendida > 0 ? 'delivered' : 'no-sale',
+            useDeliveryStore.getState().updateDeliveryStatus(String(request.rota_entrega), {
+                checkInStatus: request.status || (request.quantidade_vendida > 0 ? 'delivered' : 'no-sale'),
                 hadSale: request.teve_venda,
                 timestamp: new Date().toISOString()
             });
@@ -55,7 +55,7 @@ export const checkInService = {
             });
 
             // Reseta o status na store local para permitir novo check-in
-            useDeliveryStore.getState().resetDeliveryStatus(`del-${rotaEntregaId}`);
+            useDeliveryStore.getState().resetDeliveryStatus(String(rotaEntregaId));
 
         } catch (error) {
             console.error('Erro ao descartar check-in:', error);
