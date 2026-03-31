@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../../shared/ui/button';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 
 import { useClientesStore } from '../../domain/clientes/clienteStore';
 import { useUserStore } from '../../domain/auth/userStore';
+import { useRotas } from '../hooks/useRotas';
 import { clienteCadastroSchema, ClienteCadastroPayload } from '../../domain/clientes/model';
 import { formatCEP, formatCPFCNPJ, formatPhone } from '../../shared/utils/formatters';
 
@@ -24,6 +25,7 @@ interface CustomerRegistrationProps {
 export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistrationProps) {
   const { cadastrarCliente, isSubmitting } = useClientesStore();
   const { vendedorId } = useUserStore();
+  const { rotas, isLoading: loadingRotas } = useRotas();
   const [loadingCep, setLoadingCep] = useState(false);
 
   // Setup do formulário com ZOD
@@ -44,11 +46,12 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
       rg: '',
       data_nascimento: '',
       telefone2: '',
-      qtd_garrafa: 1,
+      qtd_garrafa: 0,
       qtd_garrafa_comprada: 0,
       dia_reposicao: '',
       obs: '',
-      rota: 'Rota Padrão', // TODO: Ajustar se necessário
+      rota: '', // Será atualizado via useEffect
+
       revendedor_xarope: false,
       revendedor_agua: false,
       cf_xarope: false,
@@ -59,7 +62,17 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
     }
   });
 
-  const { register, control, handleSubmit, setValue, watch, formState: { errors } } = form;
+  const { register, control, handleSubmit, setValue, getValues, watch, formState: { errors } } = form;
+
+  // Auto-seleciona a primeira rota assim que carregar
+  useEffect(() => {
+    if (rotas && rotas.length > 0) {
+      const atual = getValues('rota');
+      if (!atual) {
+        setValue('rota', rotas[0].nome);
+      }
+    }
+  }, [rotas, setValue, getValues]);
 
   // Busca de CEP
   const handleSearchCEP = async () => {
@@ -278,16 +291,17 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
           <CardContent className="space-y-4">
 
             <div>
-              <Label htmlFor="dia_reposicao">Dia de Reposição *</Label>
+              <Label htmlFor="dia_reposicao">Dia de Reposição</Label>
               <Controller
                 control={control}
                 name="dia_reposicao"
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
+                      <SelectValue placeholder="Selecione (opcional)..." />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="Não definido">Não definido</SelectItem>
                       <SelectItem value="Segunda">Segunda</SelectItem>
                       <SelectItem value="Terca">Terça</SelectItem>
                       <SelectItem value="Quarta">Quarta</SelectItem>
@@ -311,7 +325,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
                   variant="outline"
                   size="icon"
                   className="h-10 w-10 bg-white"
-                  onClick={() => setValue('qtd_garrafa', Math.max(1, watch('qtd_garrafa') - 1))}
+                  onClick={() => setValue('qtd_garrafa', Math.max(0, watch('qtd_garrafa') - 1))}
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
@@ -362,12 +376,22 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
 
             {/* Rota */}
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
-              <Label htmlFor="rota" className="text-blue-700 font-semibold block">Informe a rota:</Label>
-              <Input
-                id="rota"
-                {...register('rota')}
-                placeholder="Rota Padrão"
-                className="bg-white border-blue-200"
+              <Label htmlFor="rota" className="text-blue-700 font-semibold block">Informe a rota *</Label>
+              <Controller
+                control={control}
+                name="rota"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={loadingRotas}>
+                    <SelectTrigger className="bg-white border-blue-200 text-black">
+                      <SelectValue placeholder={loadingRotas ? "Carregando rotas..." : "Selecione uma rota..."} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rotas.map(rota => (
+                        <SelectItem key={rota.id} value={rota.nome}>{rota.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
               {errors.rota && <p className="text-red-500 text-xs mt-1">{errors.rota.message}</p>}
             </div>
