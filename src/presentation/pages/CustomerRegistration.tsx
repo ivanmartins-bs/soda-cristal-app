@@ -8,7 +8,7 @@ import { Label } from '../../shared/ui/label';
 import { Textarea } from '../../shared/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../shared/ui/select';
 import { Checkbox } from '../../shared/ui/checkbox';
-import { ArrowLeft, User, MapPin, FileText, Search, Loader2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, MapPin, FileText, Search, Loader2, ExternalLink, Minus, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useClientesStore } from '../../domain/clientes/clienteStore';
@@ -277,41 +277,99 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
           </CardHeader>
           <CardContent className="space-y-4">
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="dia_reposicao">Dia de Reposição *</Label>
-                <Controller
-                  control={control}
-                  name="dia_reposicao"
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Segunda">Segunda</SelectItem>
-                        <SelectItem value="Terca">Terça</SelectItem>
-                        <SelectItem value="Quarta">Quarta</SelectItem>
-                        <SelectItem value="Quinta">Quinta</SelectItem>
-                        <SelectItem value="Sexta">Sexta</SelectItem>
-                        <SelectItem value="Sabado">Sábado</SelectItem>
-                        <SelectItem value="Domingo">Domingo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.dia_reposicao && <p className="text-red-500 text-xs mt-1">{errors.dia_reposicao.message}</p>}
-              </div>
+            <div>
+              <Label htmlFor="dia_reposicao">Dia de Reposição *</Label>
+              <Controller
+                control={control}
+                name="dia_reposicao"
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Segunda">Segunda</SelectItem>
+                      <SelectItem value="Terca">Terça</SelectItem>
+                      <SelectItem value="Quarta">Quarta</SelectItem>
+                      <SelectItem value="Quinta">Quinta</SelectItem>
+                      <SelectItem value="Sexta">Sexta</SelectItem>
+                      <SelectItem value="Sabado">Sábado</SelectItem>
+                      <SelectItem value="Domingo">Domingo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.dia_reposicao && <p className="text-red-500 text-xs mt-1">{errors.dia_reposicao.message}</p>}
+            </div>
 
-              <div>
-                <Label htmlFor="qtd_garrafa">Qtd. Garrafas *</Label>
-                <Input
-                  type="number"
-                  {...register('qtd_garrafa')}
-                  min={1}
-                />
-                {errors.qtd_garrafa && <p className="text-red-500 text-xs mt-1">{errors.qtd_garrafa.message}</p>}
+            {/* Garrafas Consignadas */}
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
+              <Label className="text-blue-700 font-semibold block">Quantidade Consignada</Label>
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 bg-white"
+                  onClick={() => setValue('qtd_garrafa', Math.max(1, watch('qtd_garrafa') - 1))}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="text-xl font-bold w-12 text-center text-blue-900">
+                  {watch('qtd_garrafa')}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 bg-white"
+                  onClick={() => setValue('qtd_garrafa', watch('qtd_garrafa') + 1)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
+              {errors.qtd_garrafa && <p className="text-red-500 text-xs text-center">{errors.qtd_garrafa.message}</p>}
+            </div>
+
+            {/* Garrafas Compradas */}
+            <div className="bg-green-50 border border-green-100 rounded-lg p-4 space-y-3">
+              <Label className="text-green-700 font-semibold block">Quantidade Comprada</Label>
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 bg-white"
+                  onClick={() => setValue('qtd_garrafa_comprada', Math.max(0, (watch('qtd_garrafa_comprada') || 0) - 1))}
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <span className="text-xl font-bold w-12 text-center text-green-900">
+                  {watch('qtd_garrafa_comprada') || 0}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 bg-white"
+                  onClick={() => setValue('qtd_garrafa_comprada', (watch('qtd_garrafa_comprada') || 0) + 1)}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              {errors.qtd_garrafa_comprada && <p className="text-red-500 text-xs text-center">{errors.qtd_garrafa_comprada.message}</p>}
+            </div>
+
+            {/* Rota */}
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
+              <Label htmlFor="rota" className="text-blue-700 font-semibold block">Informe a rota:</Label>
+              <Input
+                id="rota"
+                {...register('rota')}
+                placeholder="Rota Padrão"
+                className="bg-white border-blue-200"
+              />
+              {errors.rota && <p className="text-red-500 text-xs mt-1">{errors.rota.message}</p>}
             </div>
 
             <div>
