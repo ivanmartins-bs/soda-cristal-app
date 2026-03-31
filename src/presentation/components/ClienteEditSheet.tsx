@@ -37,12 +37,14 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
   const [revendedorXarope, setRevendedorXarope] = useState(false);
   const [cfAgua, setCfAgua] = useState(false);
   const [cfXarope, setCfXarope] = useState(false);
+  const [peAgua, setPeAgua] = useState(false);
+  const [peXarope, setPeXarope] = useState(false);
 
   // Ao abrir com novo cliente, popula o form
   const populateForm = () => {
     if (!cliente) return;
     setNome(cliente.cliente.nome || '');
-    setCpfCnpj(cliente.cliente.cpf_cnpj || '');
+    setCpfCnpj(cliente.cliente.cpf_cnpj || String((cliente.cliente as any).cpfcnpj || ''));
     setTelefone(cliente.cliente.celular || '');
     setTelefone2(cliente.cliente.celular2 || '');
     setRua(cliente.cliente.rua || '');
@@ -56,6 +58,8 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
     setRevendedorXarope(Boolean(cliente.cliente.revendedor_xarope));
     setCfAgua(Boolean(cliente.cliente.cf_agua));
     setCfXarope(Boolean(cliente.cliente.cf_xarope));
+    setPeAgua(Boolean(cliente.cliente.precoespecial_agua));
+    setPeXarope(Boolean(cliente.cliente.precoespecial_xarope));
   };
 
   useEffect(() => {
@@ -106,8 +110,8 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
         revendedor_agua: revendedorAgua,
         cf_xarope: cfXarope,
         cf_agua: cfAgua,
-        precoespecial_agua: Boolean(cliente.cliente.precoespecial_agua),
-        precoespecial_xarope: Boolean(cliente.cliente.precoespecial_xarope),
+        precoespecial_agua: peAgua,
+        precoespecial_xarope: peXarope,
         data_inativacao: '',
       };
 
@@ -198,23 +202,42 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
               <h3 className="text-sm font-semibold text-muted-foreground border-b pb-1">
                 Configuração de Produto
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 bg-white">
-                  <Checkbox checked={revendedorAgua} onCheckedChange={(v) => setRevendedorAgua(Boolean(v))} />
-                  <span className="text-sm">Revendedor Água</span>
-                </label>
-                <label className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 bg-white">
-                  <Checkbox checked={revendedorXarope} onCheckedChange={(v) => setRevendedorXarope(Boolean(v))} />
-                  <span className="text-sm">Revendedor Xarope</span>
-                </label>
-                <label className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 bg-white">
-                  <Checkbox checked={cfAgua} onCheckedChange={(v) => setCfAgua(Boolean(v))} />
-                  <span className="text-sm">CF Água</span>
-                </label>
-                <label className="flex items-center gap-2 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 bg-white">
-                  <Checkbox checked={cfXarope} onCheckedChange={(v) => setCfXarope(Boolean(v))} />
-                  <span className="text-sm">CF Xarope</span>
-                </label>
+              <div className="space-y-3 pt-2">
+                {/* Linha 1 */}
+                <div className="border rounded-md p-3 grid grid-cols-2 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={revendedorAgua} onCheckedChange={(v) => setRevendedorAgua(Boolean(v))} />
+                    <span className="text-sm">Revendedor Água</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={revendedorXarope} onCheckedChange={(v) => setRevendedorXarope(Boolean(v))} />
+                    <span className="text-sm">Revendedor Xarope</span>
+                  </label>
+                </div>
+
+                {/* Linha 2 */}
+                <div className="border rounded-md p-3 grid grid-cols-2 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={cfAgua} onCheckedChange={(v) => setCfAgua(Boolean(v))} />
+                    <span className="text-sm">C. Final. Água</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={cfXarope} onCheckedChange={(v) => setCfXarope(Boolean(v))} />
+                    <span className="text-sm">C. Final. Xarope</span>
+                  </label>
+                </div>
+
+                {/* Linha 3 */}
+                <div className="border rounded-md p-3 grid grid-cols-2 gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={peAgua} onCheckedChange={(v) => setPeAgua(Boolean(v))} />
+                    <span className="text-sm">PE Água</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox checked={peXarope} onCheckedChange={(v) => setPeXarope(Boolean(v))} />
+                    <span className="text-sm">PE Xarope</span>
+                  </label>
+                </div>
               </div>
             </div>
 
