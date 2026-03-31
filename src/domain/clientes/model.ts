@@ -76,11 +76,11 @@ export const clienteCadastroSchema = z.object({
     complemento: z.string().optional(),
 
     // Contrato
-    qtd_garrafa: z.coerce.number().min(1, 'Quantidade mínima é 1'),
+    qtd_garrafa: z.coerce.number().min(0, 'Quantidade não pode ser negativa').default(0),
     qtd_garrafa_comprada: z.coerce.number().optional().default(0),
-    dia_reposicao: z.string().min(1, 'Selecione o dia de reposição'),
+    dia_reposicao: z.string().optional().default(''),
     obs: z.string().optional(),
-    rota: z.string().optional().default('Rota Padrão'), // TODO: Pegar rota dinâmica se necessário
+    rota: z.string().optional().default('Rota Padrão'),
 
     // IDs e Flags
     id: z.number().optional().default(0),
