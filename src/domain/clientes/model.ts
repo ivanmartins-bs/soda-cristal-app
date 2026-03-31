@@ -83,6 +83,7 @@ export const clienteCadastroSchema = z.object({
     rota: z.string().optional().default('Rota Padrão'), // TODO: Pegar rota dinâmica se necessário
 
     // IDs e Flags
+    id: z.number().optional().default(0),
     vendedor: z.number(),
     tipo_cadastro: z.number().default(1), // 1 = Novo
     cliente_id_api: z.number().default(0),
