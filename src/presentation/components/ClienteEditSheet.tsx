@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '../../shared/ui/sheet';
 import { Button } from '../../shared/ui/button';
 import { Input } from '../../shared/ui/input';
@@ -58,10 +58,13 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
     setCfXarope(Boolean(cliente.cliente.cf_xarope));
   };
 
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen) {
+  useEffect(() => {
+    if (open && cliente) {
       populateForm();
     }
+  }, [open, cliente]);
+
+  const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
   };
 
@@ -79,6 +82,10 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
       const vendedorId = Number(localStorage.getItem('vendedorId')) || 0;
 
       const payload: ClienteCadastroPayload = {
+        id: 0,
+        rg: '',
+        data_nascimento: '',
+        complemento: '',
         nome,
         cpf_cnpj: cpfCnpj,
         telefone,
