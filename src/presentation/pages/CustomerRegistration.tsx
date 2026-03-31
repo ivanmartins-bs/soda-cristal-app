@@ -377,53 +377,79 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
               <Textarea {...register('obs')} placeholder="Observações gerais sobre o cliente" />
             </div>
 
-            {/* Checkboxes em Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-
-              <div className="flex items-center space-x-2 border p-3 rounded-md">
-                <Controller
-                  control={control}
-                  name="cf_agua"
-                  render={({ field }) => (
-                    <Checkbox id="cf_agua" checked={field.value} onCheckedChange={field.onChange} />
-                  )}
-                />
-                <Label htmlFor="cf_agua" className="cursor-pointer">Comodato Água</Label>
+            {/* Configuração de Produto - Agrupamentos */}
+            <div className="space-y-3 pt-2">
+              {/* Linha 1: Revendedores */}
+              <div className="border rounded-md p-3 grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={control}
+                    name="revendedor_agua"
+                    render={({ field }) => (
+                      <Checkbox id="revendedor_agua" checked={field.value} onCheckedChange={field.onChange} />
+                    )}
+                  />
+                  <Label htmlFor="revendedor_agua" className="cursor-pointer text-sm">Revendedor Água</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={control}
+                    name="revendedor_xarope"
+                    render={({ field }) => (
+                      <Checkbox id="revendedor_xarope" checked={field.value} onCheckedChange={field.onChange} />
+                    )}
+                  />
+                  <Label htmlFor="revendedor_xarope" className="cursor-pointer text-sm">Revendedor Xarope</Label>
+                </div>
               </div>
 
-              <div className="flex items-center space-x-2 border p-3 rounded-md">
-                <Controller
-                  control={control}
-                  name="cf_xarope"
-                  render={({ field }) => (
-                    <Checkbox id="cf_xarope" checked={field.value} onCheckedChange={field.onChange} />
-                  )}
-                />
-                <Label htmlFor="cf_xarope" className="cursor-pointer">Comodato Xarope</Label>
+              {/* Linha 2: C. Final */}
+              <div className="border rounded-md p-3 grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={control}
+                    name="cf_agua"
+                    render={({ field }) => (
+                      <Checkbox id="cf_agua" checked={field.value} onCheckedChange={field.onChange} />
+                    )}
+                  />
+                  <Label htmlFor="cf_agua" className="cursor-pointer text-sm">C. Final. Água</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={control}
+                    name="cf_xarope"
+                    render={({ field }) => (
+                      <Checkbox id="cf_xarope" checked={field.value} onCheckedChange={field.onChange} />
+                    )}
+                  />
+                  <Label htmlFor="cf_xarope" className="cursor-pointer text-sm">C. Final. Xarope</Label>
+                </div>
               </div>
 
-              <div className="flex items-center space-x-2 border p-3 rounded-md">
-                <Controller
-                  control={control}
-                  name="revendedor_agua"
-                  render={({ field }) => (
-                    <Checkbox id="revendedor_agua" checked={field.value} onCheckedChange={field.onChange} />
-                  )}
-                />
-                <Label htmlFor="revendedor_agua" className="cursor-pointer">Revendedor Água</Label>
+              {/* Linha 3: PE */}
+              <div className="border rounded-md p-3 grid grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={control}
+                    name="precoespecial_agua"
+                    render={({ field }) => (
+                      <Checkbox id="precoespecial_agua" checked={field.value} onCheckedChange={field.onChange} />
+                    )}
+                  />
+                  <Label htmlFor="precoespecial_agua" className="cursor-pointer text-sm">PE Água</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={control}
+                    name="precoespecial_xarope"
+                    render={({ field }) => (
+                      <Checkbox id="precoespecial_xarope" checked={field.value} onCheckedChange={field.onChange} />
+                    )}
+                  />
+                  <Label htmlFor="precoespecial_xarope" className="cursor-pointer text-sm">PE Xarope</Label>
+                </div>
               </div>
-
-              <div className="flex items-center space-x-2 border p-3 rounded-md">
-                <Controller
-                  control={control}
-                  name="revendedor_xarope"
-                  render={({ field }) => (
-                    <Checkbox id="revendedor_xarope" checked={field.value} onCheckedChange={field.onChange} />
-                  )}
-                />
-                <Label htmlFor="revendedor_xarope" className="cursor-pointer">Revendedor Xarope</Label>
-              </div>
-
             </div>
 
           </CardContent>
