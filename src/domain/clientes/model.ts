@@ -103,8 +103,8 @@ export type ClienteCadastroPayload = z.infer<typeof clienteCadastroSchema>;
 
 export interface CadastroContratosPayload {
     contratos: {
-        novosContratos: ClienteCadastroPayload[];
-        alteracaoContrato: ClienteCadastroPayload[]; // Array vazio no cadastro
-        inativacoes: ClienteCadastroPayload[];       // Array vazio no cadastro
+        novosContratos?: ClienteCadastroPayload[];
+        alteracaoContrato?: ClienteCadastroPayload[];
+        inativacoes?: ClienteCadastroPayload[];
     };
 }

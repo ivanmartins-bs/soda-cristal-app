@@ -57,9 +57,7 @@ export const clientesServices = {
         // Monta a estrutura complexa que a API exige
         const apiPayload: CadastroContratosPayload = {
             contratos: {
-                novosContratos: [payload],
-                alteracaoContrato: [],
-                inativacoes: []
+                novosContratos: [payload]
             }
         };
 
@@ -69,9 +67,7 @@ export const clientesServices = {
     async alterarCliente(payload: ClienteCadastroPayload) {
         const apiPayload: CadastroContratosPayload = {
             contratos: {
-                novosContratos: [],
-                alteracaoContrato: [{ ...payload, tipo_cadastro: 2 }],
-                inativacoes: []
+                alteracaoContrato: [{ ...payload, tipo_cadastro: 2 }]
             }
         };
 
@@ -81,9 +77,7 @@ export const clientesServices = {
     async inativarCliente(payload: ClienteCadastroPayload) {
         const apiPayload: CadastroContratosPayload = {
             contratos: {
-                novosContratos: [],
-                alteracaoContrato: [],
-                inativacoes: [{ ...payload, tipo_cadastro: 2 }] // Reutilizando a mesma lógica do original, a API deve diferenciar pelo array inativacoes
+                inativacoes: [payload] 
             }
         };
 
