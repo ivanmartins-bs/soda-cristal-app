@@ -155,7 +155,7 @@ export function CustomerRegistration({ onBack, onSuccess }: CustomerRegistration
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="cpf_cnpj">CPF/CNPJ *</Label>
+                <Label htmlFor="cpf_cnpj">CPF/CNPJ {watch('qtd_garrafa_comprada') > 0 ? '(opcional)' : '*'}</Label>
                 <Controller
                   control={control}
                   name="cpf_cnpj"

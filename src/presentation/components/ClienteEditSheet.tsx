@@ -154,7 +154,7 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
                   <Input id="edit-nome" value={nome} onChange={(e) => setNome(e.target.value)} className="border border-gray-300" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="edit-cpf">CPF/CNPJ</Label>
+                  <Label htmlFor="edit-cpf">CPF/CNPJ {numGarrafasComprada > 0 ? '(opcional)' : '*'}</Label>
                   <Input id="edit-cpf" value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="border border-gray-300" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

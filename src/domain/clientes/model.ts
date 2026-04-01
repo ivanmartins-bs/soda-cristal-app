@@ -61,7 +61,7 @@ import { z } from 'zod';
 
 export const clienteCadastroSchema = z.object({
     nome: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-    cpf_cnpj: z.string().min(11, 'Documento inválido').max(18, 'Documento inválido'),
+    cpf_cnpj: z.string().max(18, 'Documento inválido').default(''),
     rg: z.string().optional(),
     data_nascimento: z.string().optional(),
     telefone: z.string().min(10, 'Telefone inválido'),
@@ -97,6 +97,15 @@ export const clienteCadastroSchema = z.object({
     precoespecial_xarope: z.boolean().default(false),
 
     data_inativacao: z.string().default(''),
+}).superRefine((data, ctx) => {
+    const temGarrafaComprada = (data.qtd_garrafa_comprada ?? 0) > 0;
+    if (!temGarrafaComprada && (!data.cpf_cnpj || data.cpf_cnpj.replace(/\D/g, '').length < 11)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'CPF/CNPJ obrigatório quando não há garrafas compradas',
+            path: ['cpf_cnpj'],
+        });
+    }
 });
 
 export type ClienteCadastroPayload = z.infer<typeof clienteCadastroSchema>;
