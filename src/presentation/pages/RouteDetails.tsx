@@ -43,13 +43,33 @@ interface RouteDetailsProps {
 }
 
 
+interface DeliveryCardProps {
+  delivery: Delivery;
+  index: number;
+  checkInStatus: any; // We can improve this if we have the type
+  statusData: DeliveryStatusData | undefined;
+  route: Route;
+  setDeliveryParaDescartar: (d: Delivery | null) => void;
+  setDescarteSheetOpen: (open: boolean) => void;
+  setSelectedDelivery: (d: Delivery | null) => void;
+  onCheckIn: (d: Delivery) => void;
+  onOpenPDV: (d: Delivery) => void;
+  handleWhatsApp: (phone: string) => void;
+  setClienteParaEditar: (c: RotaEntregaCompleta | null) => void;
+  setEditSheetOpen: (open: boolean) => void;
+  setClienteParaDesativar: (c: RotaEntregaCompleta | null) => void;
+  setDesativarSheetOpen: (open: boolean) => void;
+  openGPS: (d: Delivery) => void;
+  clientesRota: RotaEntregaCompleta[];
+}
+
 const MemoizedDeliveryCard = memo(({ 
   delivery, index, checkInStatus, statusData, route, 
   setDeliveryParaDescartar, setDescarteSheetOpen, setSelectedDelivery, 
   onCheckIn, onOpenPDV, handleWhatsApp, setClienteParaEditar, 
   setEditSheetOpen, setClienteParaDesativar, setDesativarSheetOpen, 
   openGPS, clientesRota 
-}: any) => {
+}: DeliveryCardProps) => {
   return (
     <Card
       className={`hover:shadow-lg transition-all duration-200 border-2 ${checkInStatus
@@ -336,23 +356,22 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
     if (node) observer.current.observe(node);
   }, [isLoading]);
 
-
   useEffect(() => {
     if (route && (!route.deliveries || route.deliveries.length === 0)) {
-      // route.id pode vir como string ou number dependendo da origem
       loadClientesRota(Number(route.id));
     }
   }, [route?.id, route?.deliveries, loadClientesRota]);
 
-  const mapPrioridade = (prioridade: PrioridadeCliente): 'high' | 'medium' | 'low' => {
+  const mapPrioridade = useCallback((prioridade: PrioridadeCliente): 'high' | 'medium' | 'low' => {
     switch (prioridade) {
       case 'urgente': return 'high';
       case 'normal': return 'medium';
       case 'baixa': return 'low';
       default: return 'medium';
     }
-  };
-  const mapClienteToDelivery = (item: RotaEntregaCompleta): Delivery => {
+  }, []);
+
+  const mapClienteToDelivery = useCallback((item: RotaEntregaCompleta): Delivery => {
     return {
       id: item.rotaentrega.id.toString(),
       clienteId: item.cliente.id,
@@ -369,23 +388,22 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
       priority: mapPrioridade(rotasService.calcularPrioridade(item)),
       estimatedTime: formatApiDate(new Date()),
       routeName: item.rota.nome,
-      notes: item.cliente.observacao,
+      notes: item.cliente.observacao || '',
       latitude: item.cliente.latitude,
       longitude: item.cliente.longitude,
       diasSemAtendimento: Number(item.diassematendimento) || 0,
       diasSemConsumo: Number(item.diassemconsumo) || 0,
     };
-  };
+  }, [mapPrioridade]);
 
   const deliveries = useMemo(() => {
     if (route?.deliveries && route.deliveries.length > 0) {
       return route.deliveries;
     }
-    // Filtra somente clientes ativos (ativo === 1)
     return clientesRota
       .filter(item => item.cliente.ativo === 1)
       .map(mapClienteToDelivery);
-  }, [route?.deliveries, clientesRota]);
+  }, [route?.deliveries, clientesRota, mapClienteToDelivery]);
 
   const filtrosAtivosCount = useMemo(() => {
     return Object.values(filtros).filter(Boolean).length;
@@ -455,6 +473,7 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
       </div>
     );
   }
+
   const getCheckInStatusInfo = (deliveryId: string) => {
     const statusData = deliveryStatuses[deliveryId];
     if (!statusData || !statusData.checkInStatus) return null;
@@ -750,7 +769,6 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
         {/* Elemento sentinela para o Infinite Scroll */}
         {filteredDeliveries.length > visibleCount && (
           <div ref={lastElementRef} className="h-4 w-full" />
-
         )}
       </div>
 
