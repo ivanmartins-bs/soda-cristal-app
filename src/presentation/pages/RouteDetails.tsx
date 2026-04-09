@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, memo, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
@@ -313,6 +313,28 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
   const [descarteSheetOpen, setDescarteSheetOpen] = useState(false);
   const [deliveryParaDescartar, setDeliveryParaDescartar] = useState<Delivery | null>(null);
   const { loadClientesRota, clientesRota, isLoading } = useRotasStore();
+  const [visibleCount, setVisibleCount] = useState(20);
+  const observer = useRef<IntersectionObserver | null>(null);
+
+  // Reset do contador quando muda a rota ou busca/filtros
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [route?.id, searchTerm, filtros]);
+
+  // Callback para o componente sentinela no final da lista
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        // Carrega mais 20 se ainda houver itens para mostrar
+        setVisibleCount(prev => prev + 20);
+      }
+    });
+
+    if (node) observer.current.observe(node);
+  }, [isLoading]);
 
 
   useEffect(() => {
@@ -696,7 +718,7 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
             <Button variant="outline" onClick={onBack}>Voltar</Button>
           </div>
         ) : (
-          filteredDeliveries.map((delivery, index) => {
+          filteredDeliveries.slice(0, visibleCount).map((delivery, index) => {
             const checkInStatus = getCheckInStatusInfo(delivery.id);
             const statusData = deliveryStatuses[delivery.id];
 
@@ -723,6 +745,12 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
               />
             );
           })
+        )}
+        
+        {/* Elemento sentinela para o Infinite Scroll */}
+        {filteredDeliveries.length > visibleCount && (
+          <div ref={lastElementRef} className="h-4 w-full" />
+
         )}
       </div>
 
