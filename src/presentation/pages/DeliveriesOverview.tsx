@@ -5,10 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Button } from '../../shared/ui/button';
 import { CheckCircle, MapPin, Calendar, AlertCircle, RefreshCw, Route, Loader2 } from 'lucide-react';
 import { useRotasStore } from '../../domain/rotas/rotasStore';
-import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
-import { RotaEntregaCompleta, PrioridadeCliente } from '../../domain/rotas/models';
-import { rotasService } from '../../domain/rotas/services';
-import { formatApiDate } from '@/shared/utils/formatters';
+import { DeliveryStatusData } from '../../domain/deliveries/models';
+import { useMemo } from 'react';
+import { mapClienteToDelivery } from '../../domain/deliveries/delivery-mapper';
 
 interface DeliveriesOverviewProps {
   deliveryStatuses: Record<string, DeliveryStatusData>;
@@ -33,65 +32,24 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectRoute, vendedorId
     loadTodaysRoutes(vendedorId);
   }, [vendedorId, loadTodaysRoutes]);
 
-  const mapPrioridade = (prioridade: PrioridadeCliente): 'high' | 'medium' | 'low' => {
-    switch (prioridade) {
-      case 'urgente': return 'high';
-      case 'normal': return 'medium';
-      case 'baixa': return 'low';
-      default: return 'medium';
-    }
-  };
-
-  // const calculateEstimatedTime = (index: number): string => {
-  //   // Começa às 08:00, adiciona 15 min por cliente
-  //   const startHour = 8;
-  //   const minutesPerClient = 15;
-  //   const totalMinutes = index * minutesPerClient;
-
-  //   const hour = startHour + Math.floor(totalMinutes / 60);
-  //   const minute = totalMinutes % 60;
-
-  //   return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-  // };
-
-  // Adapter: Converter RotaEntregaCompleta (Domínio Rotas) para Delivery (Model UI/Deliveries)
-  const mapClienteToDelivery = (item: RotaEntregaCompleta): Delivery => {
-    return {
-      id: item.rotaentrega.id.toString(), // ID único da entrega na rota
-      clienteId: item.cliente.id,
-      orderId: `PED-${item.rotaentrega.id}`,
-      orderCode: `SCT-${item.cliente.id}`,
-      customerName: item.cliente.nome,
-      customerPhone: item.cliente.celular || item.cliente.celular2 || '',
-      address: `${item.cliente.rua}, ${item.cliente.numero} - ${item.cliente.bairro}`,
-      bottles: {
-        quantity: item.rotaentrega.num_garrafas || 0,
-        size: '1,5 L' // Padrão
-      },
-      status: 'pending', // Status base é pendente, UI sobrepõe com deliveryStatuses
-      priority: mapPrioridade(rotasService.calcularPrioridade(item)),
-      estimatedTime: formatApiDate(new Date()),
-      routeName: item.rota.nome,
-      notes: item.cliente.observacao,
-      latitude: item.cliente.latitude,
-      longitude: item.cliente.longitude,
-      diasSemAtendimento: Number(item.diassematendimento) || 0,
-      diasSemConsumo: Number(item.diassemconsumo) || 0,
-    };
-  };
-
-  const allDeliveries = clientesRota.map((cliente) => mapClienteToDelivery(cliente));
+  const allDeliveries = useMemo(() => 
+    clientesRota.map((cliente) => mapClienteToDelivery(cliente)),
+  [clientesRota]);
   
   // Filtragem baseada no status local (check-in realizado ou não)
-  const todayDeliveries = allDeliveries.filter(d => {
-    const status = deliveryStatuses[d.id]?.checkInStatus;
-    return !status || status === undefined; // Se não tem status, é pendente
-  });
+  const todayDeliveries = useMemo(() => 
+    allDeliveries.filter(d => {
+      const status = deliveryStatuses[d.id]?.checkInStatus;
+      return !status || status === undefined; // Se não tem status, é pendente
+    }),
+  [allDeliveries, deliveryStatuses]);
 
-  const completedDeliveries = allDeliveries.filter(d => {
-    const status = deliveryStatuses[d.id]?.checkInStatus;
-    return status !== undefined; // Se tem status, está concluído/processado
-  });
+  const completedDeliveries = useMemo(() => 
+    allDeliveries.filter(d => {
+      const status = deliveryStatuses[d.id]?.checkInStatus;
+      return status !== undefined; // Se tem status, está concluído/processado
+    }),
+  [allDeliveries, deliveryStatuses]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -119,49 +77,51 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectRoute, vendedorId
     }
   };
 
-  const mappedRoutes = rotasDeHoje.map(rota => {
+  const mappedRoutes = useMemo(() => 
+    rotasDeHoje.map(rota => {
+      const routeDeliveries = clientesRota
+        .filter(c => c.rota.id === rota.id)
+        .map(mapClienteToDelivery);
 
-    const routeDeliveries = clientesRota.filter(c => c.rota.id === rota.id).map(mapClienteToDelivery);
-
-    // Predominant zone
-    const bairroCount: Record<string, number> = {};
-    const deliveriesInRoute = clientesRota.filter(c => c.rota.id === rota.id);
-    for (const d of deliveriesInRoute) {
-      const bairro = d.cliente.bairro?.trim();
-      if (bairro) {
-        bairroCount[bairro] = (bairroCount[bairro] || 0) + 1;
+      // Predominant zone
+      const bairroCount: Record<string, number> = {};
+      const deliveriesInRoute = clientesRota.filter(c => c.rota.id === rota.id);
+      for (const d of deliveriesInRoute) {
+        const bairro = d.cliente.bairro?.trim();
+        if (bairro) {
+          bairroCount[bairro] = (bairroCount[bairro] || 0) + 1;
+        }
       }
-    }
-    const sortedZonas = Object.entries(bairroCount).sort((a, b) => b[1] - a[1]);
-    const zone = sortedZonas.length > 0 ? sortedZonas[0][0] : '';
+      const sortedZonas = Object.entries(bairroCount).sort((a, b) => b[1] - a[1]);
+      const zone = sortedZonas.length > 0 ? sortedZonas[0][0] : '';
 
-    const pendingDeliveriesCount = routeDeliveries.filter(d => !deliveryStatuses[d.id]?.checkInStatus).length;
-    const totalDeliveriesCount = routeDeliveries.length;
+      const pendingDeliveriesCount = routeDeliveries.filter(d => !deliveryStatuses[d.id]?.checkInStatus).length;
+      const totalDeliveriesCount = routeDeliveries.length;
 
-    let status = 'pending';
-    if (totalDeliveriesCount > 0 && pendingDeliveriesCount === 0) {
-      status = 'completed';
-    } else if (totalDeliveriesCount > 0 && pendingDeliveriesCount < totalDeliveriesCount) {
-      status = 'in-progress';
-    }
-    // Removido o filtro que usava rota.checkin_fechado === 1
+      let status = 'pending';
+      if (totalDeliveriesCount > 0 && pendingDeliveriesCount === 0) {
+        status = 'completed';
+      } else if (totalDeliveriesCount > 0 && pendingDeliveriesCount < totalDeliveriesCount) {
+        status = 'in-progress';
+      }
 
-    return {
-      ...rota,
-      id: rota.id,
-      name: rota.nome,
-      zone,
-      pendingDeliveries: pendingDeliveriesCount,
-      totalDeliveries: totalDeliveriesCount,
-      deliveries: routeDeliveries,
-      status
-    };
-  });
+      return {
+        ...rota,
+        id: rota.id,
+        name: rota.nome,
+        zone,
+        pendingDeliveries: pendingDeliveriesCount,
+        totalDeliveries: totalDeliveriesCount,
+        deliveries: routeDeliveries,
+        status
+      };
+    }),
+  [rotasDeHoje, clientesRota, deliveryStatuses]);
 
   // Todas as rotas do dia agora ficam na aba principal, independente se estão concluídas na API ou não.
   // A aba 'completed' mostrará apenas as rotas onde TODOS os clientes foram atendidos (no app do celular).
-  const pendingRoutes = mappedRoutes.filter(r => r.status !== 'completed');
-  const completedRoutes = mappedRoutes.filter(r => r.status === 'completed');
+  const pendingRoutes = useMemo(() => mappedRoutes.filter(r => r.status !== 'completed'), [mappedRoutes]);
+  const completedRoutes = useMemo(() => mappedRoutes.filter(r => r.status === 'completed'), [mappedRoutes]);
 
   const renderRouteCard = (route: any, showCompleted = false) => {
     return (

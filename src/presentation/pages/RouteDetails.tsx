@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, memo, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../shared/ui/card';
 import { Button } from '../../shared/ui/button';
 import { Badge } from '../../shared/ui/badge';
@@ -9,12 +9,12 @@ import { Input } from '../../shared/ui/input';
 import { ClienteEditSheet } from '../components/ClienteEditSheet';
 import { ClienteDesativarSheet } from '../components/ClienteDesativarSheet';
 import { CheckInDescarteSheet } from '../components/CheckInDescarteSheet';
-import { formatPhone, formatApiDate } from '@/shared/utils/formatters';
+import { formatPhone} from '@/shared/utils/formatters';
 
 import { Delivery, DeliveryStatusData } from '../../domain/deliveries/models';
+import { mapClienteToDelivery } from '../../domain/deliveries/delivery-mapper';
 import { useRotasStore } from '../../domain/rotas/rotasStore';
-import { rotasService } from '../../domain/rotas/services';
-import { RotaEntregaCompleta, PrioridadeCliente } from '../../domain/rotas/models';
+import { RotaEntregaCompleta } from '../../domain/rotas/models';
 
 interface FiltrosEstrategicos {
   periodo15a29: boolean;
@@ -43,13 +43,33 @@ interface RouteDetailsProps {
 }
 
 
+interface DeliveryCardProps {
+  delivery: Delivery;
+  index: number;
+  checkInStatus: any; // We can improve this if we have the type
+  statusData: DeliveryStatusData | undefined;
+  route: Route;
+  setDeliveryParaDescartar: (d: Delivery | null) => void;
+  setDescarteSheetOpen: (open: boolean) => void;
+  setSelectedDelivery: (d: Delivery | null) => void;
+  onCheckIn: (d: Delivery) => void;
+  onOpenPDV: (d: Delivery) => void;
+  handleWhatsApp: (phone: string) => void;
+  setClienteParaEditar: (c: RotaEntregaCompleta | null) => void;
+  setEditSheetOpen: (open: boolean) => void;
+  setClienteParaDesativar: (c: RotaEntregaCompleta | null) => void;
+  setDesativarSheetOpen: (open: boolean) => void;
+  openGPS: (d: Delivery) => void;
+  clientesRota: RotaEntregaCompleta[];
+}
+
 const MemoizedDeliveryCard = memo(({ 
   delivery, index, checkInStatus, statusData, route, 
   setDeliveryParaDescartar, setDescarteSheetOpen, setSelectedDelivery, 
   onCheckIn, onOpenPDV, handleWhatsApp, setClienteParaEditar, 
   setEditSheetOpen, setClienteParaDesativar, setDesativarSheetOpen, 
   openGPS, clientesRota 
-}: any) => {
+}: DeliveryCardProps) => {
   return (
     <Card
       className={`hover:shadow-lg transition-all duration-200 border-2 ${checkInStatus
@@ -313,53 +333,39 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
   const [descarteSheetOpen, setDescarteSheetOpen] = useState(false);
   const [deliveryParaDescartar, setDeliveryParaDescartar] = useState<Delivery | null>(null);
   const { loadClientesRota, clientesRota, isLoading } = useRotasStore();
+  const [visibleCount, setVisibleCount] = useState(20);
+  const observer = useRef<IntersectionObserver | null>(null);
 
+  // Reset do contador quando muda a rota ou busca/filtros
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [route?.id, searchTerm, filtros]);
+
+  // Callback para o componente sentinela no final da lista
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading) return;
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        // Carrega mais 20 se ainda houver itens para mostrar
+        setVisibleCount(prev => prev + 20);
+      }
+    });
+
+    if (node) observer.current.observe(node);
+  }, [isLoading]);
 
   useEffect(() => {
     if (route && (!route.deliveries || route.deliveries.length === 0)) {
-      // route.id pode vir como string ou number dependendo da origem
       loadClientesRota(Number(route.id));
     }
   }, [route?.id, route?.deliveries, loadClientesRota]);
-
-  const mapPrioridade = (prioridade: PrioridadeCliente): 'high' | 'medium' | 'low' => {
-    switch (prioridade) {
-      case 'urgente': return 'high';
-      case 'normal': return 'medium';
-      case 'baixa': return 'low';
-      default: return 'medium';
-    }
-  };
-  const mapClienteToDelivery = (item: RotaEntregaCompleta): Delivery => {
-    return {
-      id: item.rotaentrega.id.toString(),
-      clienteId: item.cliente.id,
-      orderId: `PED-${item.rotaentrega.id}`,
-      orderCode: `SCT-${item.cliente.id}`,
-      customerName: item.cliente.nome,
-      customerPhone: item.cliente.celular || item.cliente.celular2 || '',
-      address: `${item.cliente.rua}, ${item.cliente.numero} - ${item.cliente.bairro}`,
-      bottles: {
-        quantity: item.rotaentrega.num_garrafas || 0,
-        size: '1,5 L'
-      },
-      status: 'pending',
-      priority: mapPrioridade(rotasService.calcularPrioridade(item)),
-      estimatedTime: formatApiDate(new Date()),
-      routeName: item.rota.nome,
-      notes: item.cliente.observacao,
-      latitude: item.cliente.latitude,
-      longitude: item.cliente.longitude,
-      diasSemAtendimento: Number(item.diassematendimento) || 0,
-      diasSemConsumo: Number(item.diassemconsumo) || 0,
-    };
-  };
 
   const deliveries = useMemo(() => {
     if (route?.deliveries && route.deliveries.length > 0) {
       return route.deliveries;
     }
-    // Filtra somente clientes ativos (ativo === 1)
     return clientesRota
       .filter(item => item.cliente.ativo === 1)
       .map(mapClienteToDelivery);
@@ -433,6 +439,7 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
       </div>
     );
   }
+
   const getCheckInStatusInfo = (deliveryId: string) => {
     const statusData = deliveryStatuses[deliveryId];
     if (!statusData || !statusData.checkInStatus) return null;
@@ -696,7 +703,7 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
             <Button variant="outline" onClick={onBack}>Voltar</Button>
           </div>
         ) : (
-          filteredDeliveries.map((delivery, index) => {
+          filteredDeliveries.slice(0, visibleCount).map((delivery, index) => {
             const checkInStatus = getCheckInStatusInfo(delivery.id);
             const statusData = deliveryStatuses[delivery.id];
 
@@ -723,6 +730,11 @@ export function RouteDetails({ route, deliveryStatuses, onBack, onCheckIn, onOpe
               />
             );
           })
+        )}
+        
+        {/* Elemento sentinela para o Infinite Scroll */}
+        {filteredDeliveries.length > visibleCount && (
+          <div ref={lastElementRef} className="h-4 w-full" />
         )}
       </div>
 
