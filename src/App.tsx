@@ -2,6 +2,7 @@ import { useUserStore } from "./domain/auth/userStore";
 import { useUiStore } from "./shared/store/uiStore";
 import { useDeliveryStore } from "./domain/deliveries/deliveryStore";
 import { useRotasStore } from "./domain/rotas/rotasStore";
+import { syncNetworkFromNavigator } from "./shared/store/networkStore";
 import { Toaster } from "./shared/ui/sonner";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import React, { useEffect, lazy, Suspense } from "react";
@@ -44,9 +45,10 @@ const DeliveriesOverview = lazyWithChunkRetry(() => import("./presentation/pages
 export default function App() {
   // Seletores granulares evitam re-renders do componente raiz por mudanças irrelevantes
   const isLoggedIn = useUserStore(s => s.isLoggedIn);
-  const initialzedAuth = useUserStore(s => s.initialzedAuth);
+  const initializeAuth = useUserStore(s => s.initializeAuth);
   const isInitialized = useUserStore(s => s.isInitialized);
   const vendedorId = useUserStore(s => s.vendedorId);
+  const setHasHydratedFromStorage = useRotasStore(s => s.setHasHydratedFromStorage);
 
   const selectedCustomer = useUiStore(s => s.selectedCustomer);
   const setSelectedCustomer = useUiStore(s => s.setSelectedCustomer);
@@ -62,17 +64,38 @@ export default function App() {
 
   useEffect(() => {
     if (!isInitialized) {
-      initialzedAuth();
+      initializeAuth();
     }
-  }, [initialzedAuth, isInitialized]);
+  }, [initializeAuth, isInitialized]);
 
   // Hidrata o rotasStore do IndexedDB somente após a auth estar pronta e o usuário logado.
-  // skipHydration: true no store garante que a UI (login/loading) aparece antes dos dados pesados.
+  // Só libera loads da API depois do rehydrate (evita corrida com cache vazio).
   useEffect(() => {
-    if (isInitialized && isLoggedIn) {
-      useRotasStore.persist.rehydrate();
+    if (!isInitialized || !isLoggedIn) {
+      setHasHydratedFromStorage(false);
+      return;
     }
-  }, [isInitialized, isLoggedIn]);
+    let cancelled = false;
+    void Promise.resolve(useRotasStore.persist.rehydrate()).then(() => {
+      if (!cancelled) setHasHydratedFromStorage(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isInitialized, isLoggedIn, setHasHydratedFromStorage]);
+
+  // Conectividade: navigator + eventos. Com Capacitor, complemente com @capacitor/network (ver networkStore.ts).
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    syncNetworkFromNavigator();
+    const onChange = () => syncNetworkFromNavigator();
+    window.addEventListener("online", onChange);
+    window.addEventListener("offline", onChange);
+    return () => {
+      window.removeEventListener("online", onChange);
+      window.removeEventListener("offline", onChange);
+    };
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) {
