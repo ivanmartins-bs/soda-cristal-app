@@ -1,6 +1,7 @@
 import { useUserStore } from "./domain/auth/userStore";
 import { useUiStore } from "./shared/store/uiStore";
 import { useDeliveryStore } from "./domain/deliveries/deliveryStore";
+import { useRotasStore } from "./domain/rotas/rotasStore";
 import { Toaster } from "./shared/ui/sonner";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import React, { useEffect, lazy, Suspense } from "react";
@@ -63,6 +64,14 @@ export default function App() {
       initialzedAuth();
     }
   }, [initialzedAuth, isInitialized]);
+
+  // Hidrata o rotasStore do IndexedDB somente após a auth estar pronta e o usuário logado.
+  // skipHydration: true no store garante que a UI (login/loading) aparece antes dos dados pesados.
+  useEffect(() => {
+    if (isInitialized && isLoggedIn) {
+      useRotasStore.persist.rehydrate();
+    }
+  }, [isInitialized, isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) {
