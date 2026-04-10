@@ -13,9 +13,48 @@ interface JWTPayload {
     [key: string]: unknown;
 }
 
+const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+function base64Decode(input: string): string {
+    const str = input.replace(/=+$/, '');
+    let output = '';
+
+    for (let i = 0, len = str.length; i < len; i += 4) {
+        const a = BASE64_CHARS.indexOf(str[i]);
+        const b = BASE64_CHARS.indexOf(str[i + 1]);
+        const c = BASE64_CHARS.indexOf(str[i + 2]);
+        const d = BASE64_CHARS.indexOf(str[i + 3]);
+
+        const bits = (a << 18) | (b << 12) | (c << 6) | d;
+
+        output += String.fromCharCode((bits >> 16) & 0xff);
+        if (c !== -1 && str[i + 2] !== undefined) output += String.fromCharCode((bits >> 8) & 0xff);
+        if (d !== -1 && str[i + 3] !== undefined) output += String.fromCharCode(bits & 0xff);
+    }
+
+    return output;
+}
+
+function decodeBase64Url(base64Url: string): string {
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
+    const padding = base64.length % 4;
+    if (padding) {
+        base64 += '='.repeat(4 - padding);
+    }
+
+    const binaryStr = base64Decode(base64);
+
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    return new TextDecoder().decode(bytes);
+}
+
 export const decodeJWT = (token: string): JWTPayload | null => {
     try {
-        // JWT tem 3 partes separadas por ponto: header.payload.signature
         const parts = token.split('.');
 
         if (parts.length !== 3) {
@@ -23,25 +62,7 @@ export const decodeJWT = (token: string): JWTPayload | null => {
             return null;
         }
 
-        // Decodifica o payload (segunda parte)
-        let payload = parts[1];
-        
-        // Converte Base64Url para Base64 padrão
-        payload = payload.replace(/-/g, '+').replace(/_/g, '/');
-        
-        // Restaura o padding
-        const padding = payload.length % 4;
-        if (padding) {
-            payload += '='.repeat(4 - padding);
-        }
-
-        // Decodifica e garante que caracteres UTF-8 (como acentos) funcionem corretamente
-        const decoded = decodeURIComponent(
-            window.atob(payload).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join('')
-        );
-        
+        const decoded = decodeBase64Url(parts[1]);
         const parsed = JSON.parse(decoded);
 
         return parsed as JWTPayload;

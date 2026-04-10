@@ -3,6 +3,12 @@ import { userService, LoginRequest } from '../../shared/api/services/userService
 import type { User } from './models';
 import { isTokenValid } from '../../shared/utils/tokenValidator';
 
+const AUTH_STORAGE_KEYS = ['auth_token', 'vendedorId', 'distribuidorId', 'user', 'soda-delivery-storage', 'soda-rotas-storage'] as const;
+
+function clearAuthStorage() {
+    AUTH_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+}
+
 interface UserState {
     isLoggedIn: boolean;
     user: User | null;
@@ -31,73 +37,40 @@ export const useUserStore = create<UserState>((set) => ({
         const distribuidorId = localStorage.getItem('distribuidorId');
         const userStr = localStorage.getItem('user');
 
-
-
-        if (token && vendedorId && distribuidorId && userStr) {
-            // ✅ Valida o token JWT antes de restaurar a sessão
-            if (!isTokenValid(token)) {
-                console.warn('⚠️ Token JWT inválido ou expirado. Limpando sessão...');
-
-
-
-                // Limpa dados inválidos
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('vendedorId');
-                localStorage.removeItem('distribuidorId');
-                localStorage.removeItem('user');
-                localStorage.removeItem('soda-delivery-storage');
-                localStorage.removeItem('soda-rotas-storage');
-
-                set({
-                    isLoggedIn: false,
-                    user: null,
-                    vendedorId: null,
-                    distribuidorId: null,
-                    isLoading: false,
-                    isInitialized: true
-                });
-                return;
-            }
-
-            try {
-                // Parse do usuário salvo no localStorage
-                const user = JSON.parse(userStr);
-
-
-
-                // Restaura o estado de autenticação
-                // O interceptor do Axios lidará com erros 401 nas próximas requisições
-                set({
-                    isLoggedIn: true,
-                    user: user,
-                    vendedorId: vendedorId ? Number(vendedorId) : null,
-                    distribuidorId: distribuidorId ? Number(distribuidorId) : null,
-                    isLoading: false,
-                    isInitialized: true
-                });
-
-            } catch (error: any) {
-                console.error('❌ Erro ao parsear dados do localStorage:', error);
-
-                // Limpa dados corrompidos
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('vendedorId');
-                localStorage.removeItem('distribuidorId');
-                localStorage.removeItem('user');
-                localStorage.removeItem('soda-delivery-storage');
-                localStorage.removeItem('soda-rotas-storage');
-
-                set({
-                    isLoggedIn: false,
-                    user: null,
-                    vendedorId: null,
-                    distribuidorId: null,
-                    isLoading: false,
-                    isInitialized: true
-                });
-            }
-        } else {
+        if (!token || !vendedorId || !distribuidorId || !userStr) {
             set({ isInitialized: true });
+            return;
+        }
+
+        let tokenExpired = false;
+        try {
+            tokenExpired = !isTokenValid(token);
+        } catch {
+            tokenExpired = true;
+        }
+
+        if (tokenExpired) {
+            console.warn('Token JWT inválido ou expirado. Limpando sessão...');
+            clearAuthStorage();
+            set({ isLoggedIn: false, user: null, vendedorId: null, distribuidorId: null, isLoading: false, isInitialized: true });
+            return;
+        }
+
+        try {
+            const user = JSON.parse(userStr);
+
+            set({
+                isLoggedIn: true,
+                user,
+                vendedorId: Number(vendedorId),
+                distribuidorId: Number(distribuidorId),
+                isLoading: false,
+                isInitialized: true
+            });
+        } catch (error: unknown) {
+            console.error('Erro ao parsear dados do localStorage:', error);
+            clearAuthStorage();
+            set({ isLoggedIn: false, user: null, vendedorId: null, distribuidorId: null, isLoading: false, isInitialized: true });
         }
     },
 
@@ -106,15 +79,9 @@ export const useUserStore = create<UserState>((set) => ({
         try {
             const response = await userService.login(credentials);
 
-            // ✅ Valida o token JWT recebido do backend
-            if (!isTokenValid(response.access_token)) {
-                console.error('❌ Token JWT recebido do backend é inválido!');
-
-                throw new Error('Token JWT inválido recebido do servidor');
+            if (!response.access_token) {
+                throw new Error('Token não recebido do servidor');
             }
-
-            // Armazena token - idealmente usar um authService separado ou interceptor managing isso,
-            // mas por enquanto simples:
 
             localStorage.setItem('auth_token', response.access_token);
             localStorage.setItem('vendedorId', response.vendedor.id.toString());
@@ -123,30 +90,24 @@ export const useUserStore = create<UserState>((set) => ({
 
             set({
                 isLoggedIn: true,
-                user: response.user,// Fallback se backend não retornar user object ainda
+                user: response.user,
                 vendedorId: response.vendedor.id,
                 distribuidorId: response.distribuidor.id,
                 isLoading: false,
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Login failed', error);
+            const err = error as { response?: { data?: { message?: string } }; message?: string };
             set({
-                error: error.response?.data?.message || error.message || 'Falha ao realizar login',
+                error: err.response?.data?.message || err.message || 'Falha ao realizar login',
                 isLoading: false,
                 isLoggedIn: false
             });
-            throw error; // Re-throw para componente poder reagir se quiser
+            throw error;
         }
     },
     logout: () => {
-
-
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('vendedorId');
-        localStorage.removeItem('distribuidorId');
-        localStorage.removeItem('user');
-        localStorage.removeItem('soda-delivery-storage');
-        localStorage.removeItem('soda-rotas-storage');
+        clearAuthStorage();
         set({ isLoggedIn: false, user: null, vendedorId: null, distribuidorId: null });
     },
 }));
