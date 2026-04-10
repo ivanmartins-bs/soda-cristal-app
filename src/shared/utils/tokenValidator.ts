@@ -13,11 +13,6 @@ interface JWTPayload {
     [key: string]: unknown;
 }
 
-/**
- * Decodifica o payload de um token JWT sem validar a assinatura
- * @param token - Token JWT completo
- * @returns Payload decodificado ou null se inválido
- */
 export const decodeJWT = (token: string): JWTPayload | null => {
     try {
         // JWT tem 3 partes separadas por ponto: header.payload.signature
@@ -29,8 +24,24 @@ export const decodeJWT = (token: string): JWTPayload | null => {
         }
 
         // Decodifica o payload (segunda parte)
-        const payload = parts[1];
-        const decoded = atob(payload);
+        let payload = parts[1];
+        
+        // Converte Base64Url para Base64 padrão
+        payload = payload.replace(/-/g, '+').replace(/_/g, '/');
+        
+        // Restaura o padding
+        const padding = payload.length % 4;
+        if (padding) {
+            payload += '='.repeat(4 - padding);
+        }
+
+        // Decodifica e garante que caracteres UTF-8 (como acentos) funcionem corretamente
+        const decoded = decodeURIComponent(
+            window.atob(payload).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join('')
+        );
+        
         const parsed = JSON.parse(decoded);
 
         return parsed as JWTPayload;
