@@ -3,22 +3,41 @@ import { useUiStore } from "./shared/store/uiStore";
 import { useDeliveryStore } from "./domain/deliveries/deliveryStore";
 import { Toaster } from "./shared/ui/sonner";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { useEffect, lazy, Suspense } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import { LoginScreen } from "./presentation/pages/LoginScreen";
 import { BottomNavigation } from "./presentation/components/BottomNavigation";
 import { PageLoader } from "./presentation/components/ui/PageLoader";
 
+// Recarrega a página automaticamente quando um chunk falha por deploy novo (hashes stale)
+function lazyWithChunkRetry<T extends React.ComponentType<never>>(
+  factory: () => Promise<{ default: T }>
+) {
+  return lazy(() =>
+    factory().catch((err: unknown) => {
+      const isChunkError =
+        err instanceof Error &&
+        (err.message.includes('Failed to fetch dynamically imported module') ||
+          err.message.includes('Importing a module script failed'));
+      if (isChunkError) {
+        window.location.reload();
+        return new Promise<never>(() => {});
+      }
+      return Promise.reject(err);
+    })
+  );
+}
+
 // Lazy loading pages
-const Dashboard = lazy(() => import("./presentation/pages/Dashboard").then(m => ({ default: m.Dashboard })));
-const CheckInScreen = lazy(() => import("./presentation/pages/CheckInScreen").then(m => ({ default: m.CheckInScreen })));
-const CustomerRegistration = lazy(() => import("./presentation/pages/CustomerRegistration").then(m => ({ default: m.CustomerRegistration })));
-const CustomerList = lazy(() => import("./presentation/pages/CustomerList").then(m => ({ default: m.CustomerList })));
-const CustomerHistory = lazy(() => import("./presentation/pages/CustomerHistory").then(m => ({ default: m.CustomerHistory })));
-const PendingContracts = lazy(() => import("./presentation/pages/PendingContracts").then(m => ({ default: m.PendingContracts })));
-const PDVStandalone = lazy(() => import("./presentation/pages/PDVStandalone").then(m => ({ default: m.PDVStandalone })));
-const RoutesScreen = lazy(() => import("./presentation/pages/RoutesScreen").then(m => ({ default: m.RoutesScreen })));
-const RouteDetails = lazy(() => import("./presentation/pages/RouteDetails").then(m => ({ default: m.RouteDetails })));
-const DeliveriesOverview = lazy(() => import("./presentation/pages/DeliveriesOverview").then(m => ({ default: m.DeliveriesOverview })));
+const Dashboard = lazyWithChunkRetry(() => import("./presentation/pages/Dashboard").then(m => ({ default: m.Dashboard })));
+const CheckInScreen = lazyWithChunkRetry(() => import("./presentation/pages/CheckInScreen").then(m => ({ default: m.CheckInScreen })));
+const CustomerRegistration = lazyWithChunkRetry(() => import("./presentation/pages/CustomerRegistration").then(m => ({ default: m.CustomerRegistration })));
+const CustomerList = lazyWithChunkRetry(() => import("./presentation/pages/CustomerList").then(m => ({ default: m.CustomerList })));
+const CustomerHistory = lazyWithChunkRetry(() => import("./presentation/pages/CustomerHistory").then(m => ({ default: m.CustomerHistory })));
+const PendingContracts = lazyWithChunkRetry(() => import("./presentation/pages/PendingContracts").then(m => ({ default: m.PendingContracts })));
+const PDVStandalone = lazyWithChunkRetry(() => import("./presentation/pages/PDVStandalone").then(m => ({ default: m.PDVStandalone })));
+const RoutesScreen = lazyWithChunkRetry(() => import("./presentation/pages/RoutesScreen").then(m => ({ default: m.RoutesScreen })));
+const RouteDetails = lazyWithChunkRetry(() => import("./presentation/pages/RouteDetails").then(m => ({ default: m.RouteDetails })));
+const DeliveriesOverview = lazyWithChunkRetry(() => import("./presentation/pages/DeliveriesOverview").then(m => ({ default: m.DeliveriesOverview })));
 
 export default function App() {
   // Seletores granulares evitam re-renders do componente raiz por mudanças irrelevantes
