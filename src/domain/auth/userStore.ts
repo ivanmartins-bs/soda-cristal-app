@@ -19,7 +19,7 @@ interface UserState {
     error: string | null;
     login: (credentials: LoginRequest) => Promise<void>;
     logout: () => void;
-    initialzedAuth: () => Promise<void>;
+    initializeAuth: () => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -31,7 +31,7 @@ export const useUserStore = create<UserState>((set) => ({
     error: null,
     isInitialized: false,
 
-    initialzedAuth: async () => {
+    initializeAuth: () => {
         const token = localStorage.getItem('auth_token');
         const vendedorId = localStorage.getItem('vendedorId');
         const distribuidorId = localStorage.getItem('distribuidorId');
@@ -42,22 +42,10 @@ export const useUserStore = create<UserState>((set) => ({
             return;
         }
 
-        let tokenExpired = false;
-        try {
-            tokenExpired = !isTokenValid(token);
-        } catch {
-            tokenExpired = true;
-        }
-
-        if (tokenExpired) {
-            console.warn('Token JWT inválido ou expirado. Limpando sessão...');
-            clearAuthStorage();
-            set({ isLoggedIn: false, user: null, vendedorId: null, distribuidorId: null, isLoading: false, isInitialized: true });
-            return;
-        }
+        isTokenValid(token);
 
         try {
-            const user = JSON.parse(userStr);
+            const user: User = JSON.parse(userStr);
 
             set({
                 isLoggedIn: true,
@@ -106,6 +94,7 @@ export const useUserStore = create<UserState>((set) => ({
             throw error;
         }
     },
+
     logout: () => {
         clearAuthStorage();
         set({ isLoggedIn: false, user: null, vendedorId: null, distribuidorId: null });

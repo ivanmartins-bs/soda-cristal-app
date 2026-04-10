@@ -2,15 +2,17 @@ import { useUserStore } from "./domain/auth/userStore";
 import { useUiStore } from "./shared/store/uiStore";
 import { useDeliveryStore } from "./domain/deliveries/deliveryStore";
 import { useRotasStore } from "./domain/rotas/rotasStore";
+import { syncNetworkFromNavigator } from "./shared/store/networkStore";
 import { Toaster } from "./shared/ui/sonner";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import React, { useEffect, lazy, Suspense } from "react";
 import { LoginScreen } from "./presentation/pages/LoginScreen";
 import { BottomNavigation } from "./presentation/components/BottomNavigation";
 import { PageLoader } from "./presentation/components/ui/PageLoader";
+import { Delivery, CheckInStatus } from "./domain/deliveries/models";
 
 // Recarrega a página automaticamente quando um chunk falha por deploy novo (hashes stale)
-function lazyWithChunkRetry<T extends React.ComponentType<never>>(
+function lazyWithChunkRetry<T extends React.ComponentType<any>>(
   factory: () => Promise<{ default: T }>
 ) {
   return lazy(() =>
@@ -43,9 +45,10 @@ const DeliveriesOverview = lazyWithChunkRetry(() => import("./presentation/pages
 export default function App() {
   // Seletores granulares evitam re-renders do componente raiz por mudanças irrelevantes
   const isLoggedIn = useUserStore(s => s.isLoggedIn);
-  const initialzedAuth = useUserStore(s => s.initialzedAuth);
+  const initializeAuth = useUserStore(s => s.initializeAuth);
   const isInitialized = useUserStore(s => s.isInitialized);
   const vendedorId = useUserStore(s => s.vendedorId);
+  const setHasHydratedFromStorage = useRotasStore(s => s.setHasHydratedFromStorage);
 
   const selectedCustomer = useUiStore(s => s.selectedCustomer);
   const setSelectedCustomer = useUiStore(s => s.setSelectedCustomer);
@@ -61,17 +64,38 @@ export default function App() {
 
   useEffect(() => {
     if (!isInitialized) {
-      initialzedAuth();
+      initializeAuth();
     }
-  }, [initialzedAuth, isInitialized]);
+  }, [initializeAuth, isInitialized]);
 
   // Hidrata o rotasStore do IndexedDB somente após a auth estar pronta e o usuário logado.
-  // skipHydration: true no store garante que a UI (login/loading) aparece antes dos dados pesados.
+  // Só libera loads da API depois do rehydrate (evita corrida com cache vazio).
   useEffect(() => {
-    if (isInitialized && isLoggedIn) {
-      useRotasStore.persist.rehydrate();
+    if (!isInitialized || !isLoggedIn) {
+      setHasHydratedFromStorage(false);
+      return;
     }
-  }, [isInitialized, isLoggedIn]);
+    let cancelled = false;
+    void Promise.resolve(useRotasStore.persist.rehydrate()).then(() => {
+      if (!cancelled) setHasHydratedFromStorage(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isInitialized, isLoggedIn, setHasHydratedFromStorage]);
+
+  // Conectividade: navigator + eventos. Com Capacitor, complemente com @capacitor/network (ver networkStore.ts).
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    syncNetworkFromNavigator();
+    const onChange = () => syncNetworkFromNavigator();
+    window.addEventListener("online", onChange);
+    window.addEventListener("offline", onChange);
+    return () => {
+      window.removeEventListener("online", onChange);
+      window.removeEventListener("offline", onChange);
+    };
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -101,7 +125,7 @@ export default function App() {
                 <DeliveriesOverview
                   deliveryStatuses={deliveryStatuses}
                   vendedorId={vendedorId!}
-                  onSelectRoute={(route) => {
+                  onSelectRoute={(route: unknown) => {
                     setSelectedRoute(route);
                     navigate("/routes/details");
                   }}
@@ -113,7 +137,7 @@ export default function App() {
               path="/routes"
               element={
                 <RoutesScreen
-                  onSelectRoute={(route) => {
+                  onSelectRoute={(route: unknown) => {
                     setSelectedRoute(route);
                     navigate("/routes/details");
                   }}
@@ -138,11 +162,11 @@ export default function App() {
                       navigate("/routes");
                     }
                   }}
-                  onCheckIn={(delivery) => {
+                  onCheckIn={(delivery: Delivery) => {
                     setSelectedDelivery(delivery);
                     navigate("/checkin");
                   }}
-                  onOpenPDV={(delivery) => {
+                  onOpenPDV={(delivery: Delivery) => {
                     setSelectedDelivery(delivery);
                     navigate("/pdv/delivery");
                   }}
@@ -156,7 +180,7 @@ export default function App() {
                 <CheckInScreen
                   delivery={selectedDelivery}
                   onBack={() => navigate("/routes/details")}
-                  onCheckInComplete={(delivery, status, hadSale) => {
+                  onCheckInComplete={(delivery: Delivery, status: CheckInStatus, hadSale: boolean) => {
                     // Update delivery status
                     updateDeliveryStatus(delivery.id, {
                       checkInStatus: status,
@@ -180,7 +204,7 @@ export default function App() {
                 <CustomerList
                   onAddCustomer={() => navigate("/customers/new")}
                   onViewContracts={() => navigate("/contracts")}
-                  onViewHistory={(customer) => {
+                  onViewHistory={(customer: unknown) => {
                     setSelectedCustomer(customer);
                     navigate("/customers/history");
                   }}
@@ -233,7 +257,7 @@ export default function App() {
               path="/dashboard"
               element={
                 <Dashboard
-                  onSelectDelivery={(delivery) => {
+                  onSelectDelivery={(delivery: Delivery) => {
                     setSelectedDelivery(delivery);
                     navigate("/checkin");
                   }}

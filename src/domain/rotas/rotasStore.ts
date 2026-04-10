@@ -3,9 +3,15 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import type { Rota, RotaEntregaCompleta } from './models';
 import { rotasService } from './services';
+import { isNetworkError } from '../../shared/api/networkUtils';
+
+export const OFFLINE_CACHE_MESSAGE = 'Sem conexão — exibindo dados salvos';
 
 interface RotasState {
-    // Estado
+    /** Só true após `persist.rehydrate()` (evita fetch antes do cache do IDB). Não persistido. */
+    hasHydratedFromStorage: boolean;
+    /** Aviso não-bloqueante quando há cache após falha de rede. Não persistido. */
+    offlineModeHint: string | null;
     rotas: Rota[];
     rotasDeHoje: Rota[];
     rotaAtual: Rota | null;
@@ -20,19 +26,21 @@ interface RotasState {
     loadingStep: 'rotas' | 'clientes' | null;
     loadingProgress: { current: number; total: number } | null;
 
-    // Ações
     loadRotas: (vendedorId: number, forceRefresh?: boolean) => Promise<void>;
     loadTodaysRoutes: (vendedorId: number, forceRefresh?: boolean) => Promise<void>;
     loadDeliveriesPorRotas: (rotaIds: number[]) => Promise<void>;
     selectRota: (rotaId: number) => void;
     loadClientesRota: (rotaId: number) => Promise<void>;
     clearError: () => void;
+    clearOfflineModeHint: () => void;
+    setHasHydratedFromStorage: (value: boolean) => void;
 }
 
 export const useRotasStore = create<RotasState>()(
     persist(
         (set, get) => ({
-    // Estado inicial
+    hasHydratedFromStorage: false,
+    offlineModeHint: null,
     rotas: [],
     rotasDeHoje: [],
     rotaAtual: null,
@@ -47,8 +55,14 @@ export const useRotasStore = create<RotasState>()(
     loadingStep: null,
     loadingProgress: null,
 
+    setHasHydratedFromStorage: (value: boolean) => set({ hasHydratedFromStorage: value }),
+
+    clearOfflineModeHint: () => set({ offlineModeHint: null }),
+
     // Carregar rotas do vendedor
     loadRotas: async (vendedorId: number, forceRefresh = false) => {
+        if (!get().hasHydratedFromStorage) return;
+
         const CACHE_MINUTES = 480; // 8h — rotas mudam ~1x/mês, cache agressivo para economizar rede
         const STALE_HOURS = 8;
         const now = Date.now();
@@ -70,15 +84,31 @@ export const useRotasStore = create<RotasState>()(
         const shouldShowLoading = forceRefresh || isNewDay || !staleCache;
 
         if (shouldShowLoading) {
-            set({ isLoading: true, error: null });
+            set({ isLoading: true, error: null, offlineModeHint: null });
         } else {
             set({ error: null });
         }
         
         try {
             const rotas = await rotasService.getRotasVendedor(vendedorId);
-            set({ rotas, isLoading: false, lastFetchRotas: Date.now(), lastFetchDate: today });
+            set({
+                rotas,
+                isLoading: false,
+                lastFetchRotas: Date.now(),
+                lastFetchDate: today,
+                offlineModeHint: null,
+                error: null,
+            });
         } catch (error: unknown) {
+            const state = get();
+            if (isNetworkError(error) && state.rotas.length > 0) {
+                set({
+                    isLoading: false,
+                    error: null,
+                    offlineModeHint: OFFLINE_CACHE_MESSAGE,
+                });
+                return;
+            }
             const message = error instanceof Error ? error.message : 'Erro ao carregar rotas';
             set({ error: message, isLoading: false });
         }
@@ -86,6 +116,8 @@ export const useRotasStore = create<RotasState>()(
 
     // Carregar as rotas do dia de hoje e acumular todos os clientes
     loadTodaysRoutes: async (vendedorId: number, forceRefresh = false) => {
+        if (!get().hasHydratedFromStorage) return;
+
         const CACHE_MINUTES = 480; // 8h — clientes mudam ~1x/mês, cache agressivo para economizar rede
         const STALE_HOURS = 8;
         const now = Date.now();
@@ -107,14 +139,15 @@ export const useRotasStore = create<RotasState>()(
         const shouldShowLoading = forceRefresh || isNewDay || !staleCache;
 
         if (shouldShowLoading) {
-            set({ isLoading: true, loadingStep: 'rotas', loadingProgress: null, error: null, clientesRota: [] });
+            // Mantém snapshot local até o novo payload chegar (offline / refresh)
+            set({ isLoading: true, loadingStep: 'rotas', loadingProgress: null, error: null, offlineModeHint: null });
         } else {
             set({ error: null });
         }
 
         try {
             const todaysRoutes = await rotasService.getTodaysRoutes(vendedorId);
-            set({ rotasDeHoje: todaysRoutes });
+            set({ rotasDeHoje: todaysRoutes, offlineModeHint: null });
 
             if (shouldShowLoading) {
                 set({ loadingStep: 'clientes', loadingProgress: { current: 0, total: todaysRoutes.length } });
@@ -153,9 +186,24 @@ export const useRotasStore = create<RotasState>()(
                 loadingStep: null, 
                 loadingProgress: null, 
                 lastFetchTodaysRoutes: Date.now(),
-                lastFetchDate: today 
+                lastFetchDate: today,
+                offlineModeHint: null,
+                error: null,
             });
         } catch (error: unknown) {
+            const state = get();
+            const hasCache =
+                state.clientesRota.length > 0 || state.rotasDeHoje.length > 0;
+            if (isNetworkError(error) && hasCache) {
+                set({
+                    isLoading: false,
+                    loadingStep: null,
+                    loadingProgress: null,
+                    error: null,
+                    offlineModeHint: OFFLINE_CACHE_MESSAGE,
+                });
+                return;
+            }
             const message = error instanceof Error ? error.message : 'Erro ao carregar rotas do dia';
             set({ error: message, isLoading: false, loadingStep: null, loadingProgress: null });
         }
@@ -164,6 +212,7 @@ export const useRotasStore = create<RotasState>()(
     // Carregar deliveries de múltiplas rotas com batching sequencial (evita 429)
     loadDeliveriesPorRotas: async (rotaIds: number[]) => {
         const state = get();
+        if (!state.hasHydratedFromStorage) return;
         if (state.isLoadingDeliveries) return; // Evita dupla execução (React StrictMode)
 
         // Evita recarregar se já temos dados
@@ -204,10 +253,24 @@ export const useRotasStore = create<RotasState>()(
                 }
             }
 
-            set({ isLoadingDeliveries: false, loadingStep: null, loadingProgress: null });
+            set({
+                isLoadingDeliveries: false,
+                loadingStep: null,
+                loadingProgress: null,
+                offlineModeHint: null,
+            });
         } catch (error: unknown) {
             console.error('Erro ao carregar deliveries por rota:', error);
-            set({ deliveriesPorRota: { ...accumulated }, isLoadingDeliveries: false, loadingStep: null, loadingProgress: null });
+            const hasPartial = Object.keys(accumulated).length > 0;
+            set({
+                deliveriesPorRota: { ...accumulated },
+                isLoadingDeliveries: false,
+                loadingStep: null,
+                loadingProgress: null,
+                ...(isNetworkError(error) && hasPartial
+                    ? { offlineModeHint: OFFLINE_CACHE_MESSAGE, error: null }
+                    : {}),
+            });
         }
     },
 
@@ -219,11 +282,23 @@ export const useRotasStore = create<RotasState>()(
 
     // Carregar clientes da rota
     loadClientesRota: async (rotaId: number) => {
+        if (!get().hasHydratedFromStorage) return;
+
+        const cached = get().deliveriesPorRota[rotaId];
         set({ isLoading: true, error: null });
         try {
             const clientes = await rotasService.getClientesPorRota(rotaId);
-            set({ clientesRota: clientes, isLoading: false });
+            set({ clientesRota: clientes, isLoading: false, offlineModeHint: null, error: null });
         } catch (error: unknown) {
+            if (isNetworkError(error) && cached && cached.length > 0) {
+                set({
+                    clientesRota: cached,
+                    isLoading: false,
+                    error: null,
+                    offlineModeHint: OFFLINE_CACHE_MESSAGE,
+                });
+                return;
+            }
             const message = error instanceof Error ? error.message : 'Erro ao carregar clientes';
             set({ error: message, isLoading: false });
         }

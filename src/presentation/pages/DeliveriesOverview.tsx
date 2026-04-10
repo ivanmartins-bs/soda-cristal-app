@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../shared/ui/tabs';
 import { Button } from '../../shared/ui/button';
 import { CheckCircle, MapPin, Calendar, AlertCircle, RefreshCw, Route, Loader2 } from 'lucide-react';
 import { useRotasStore } from '../../domain/rotas/rotasStore';
+import { useNetworkStore } from '../../shared/store/networkStore';
+import { OfflineDataBanner } from '../components/OfflineDataBanner';
 import { DeliveryStatusData } from '../../domain/deliveries/models';
 import { useMemo } from 'react';
 import { mapClienteToDelivery } from '../../domain/deliveries/delivery-mapper';
@@ -25,12 +27,22 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectRoute, vendedorId
     loadingProgress, 
     error, 
     loadTodaysRoutes, 
-    selectRota 
+    selectRota,
+    hasHydratedFromStorage,
+    offlineModeHint,
   } = useRotasStore();
+  const isOnline = useNetworkStore(s => s.isOnline);
 
   useEffect(() => {
+    if (!hasHydratedFromStorage) return;
     loadTodaysRoutes(vendedorId);
-  }, [vendedorId, loadTodaysRoutes]);
+  }, [vendedorId, loadTodaysRoutes, hasHydratedFromStorage]);
+
+  const showOfflineBanner =
+    Boolean(offlineModeHint) ||
+    (!isOnline && (clientesRota.length > 0 || rotasDeHoje.length > 0));
+  const offlineBannerText =
+    offlineModeHint ?? 'Sem conexão — exibindo dados salvos';
 
   const allDeliveries = useMemo(() => 
     clientesRota.map((cliente) => mapClienteToDelivery(cliente)),
@@ -267,7 +279,8 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectRoute, vendedorId
     );
   }
 
-  if (error) {
+  const hasRotasCache = clientesRota.length > 0 || rotasDeHoje.length > 0;
+  if (error && !hasRotasCache) {
     return (
       <div className="p-4 flex flex-col items-center justify-center h-[calc(100vh-100px)] text-center space-y-4">
         <AlertCircle className="w-12 h-12 text-red-500" />
@@ -293,6 +306,12 @@ export function DeliveriesOverview({ deliveryStatuses, onSelectRoute, vendedorId
 
   return (
     <div className="p-4 space-y-4 pb-20">
+      {showOfflineBanner ? <OfflineDataBanner message={offlineBannerText} /> : null}
+      {error && hasRotasCache ? (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          {error}
+        </div>
+      ) : null}
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold">Minhas Rotas de Hoje</h1>
