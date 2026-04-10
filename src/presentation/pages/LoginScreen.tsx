@@ -16,13 +16,13 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const login = useUserStore((state) => state.login);
   const isLoading = useUserStore((state) => state.isLoading);
   const error = useUserStore((state) => state.error);
-  
+
   // Nossos hooks de rede
   const { isOffline, isSlowConnection } = useNetworkStatus();
 
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // Estado para controlar mensagens se a autenticação estiver demorando
   const [isTakingTooLong, setIsTakingTooLong] = useState(false);
 
@@ -55,7 +55,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex flex-col items-center justify-center p-4 gap-4">
-      
+
       {/* Avisos de Rede */}
       <div className="w-full max-w-sm space-y-2">
         {isOffline && (
@@ -83,6 +83,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           <div className="mx-auto mb-4 w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #008000 0%, #00a000 100%)' }}>
             <img src="../logo_soda_cristal.png" alt="Logo Soda Cristal" />
           </div>
+          <span className="text-xs text-gray-400 font-mono">v.10.04</span>
           <CardTitle className="text-2xl" style={{ color: '#008000' }}>Soda Cristal</CardTitle>
           <CardDescription>
             Entre com suas credenciais para acessar o sistema de entregas
