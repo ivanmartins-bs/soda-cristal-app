@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import type { Rota, RotaEntregaCompleta } from './models';
 import { rotasService } from './services';
 
@@ -233,24 +234,20 @@ export const useRotasStore = create<RotasState>()(
         {
             name: 'soda-rotas-storage',
             storage: createJSONStorage(() => ({
-                getItem: (name: string) => localStorage.getItem(name),
-                setItem: (name: string, value: string) => {
-                    try {
-                        localStorage.setItem(name, value);
-                    } catch {
-                        // Quota exceeded — dados pesados vivem apenas na memória
-                        console.warn('[Storage] Quota exceeded, dados vivem apenas em memória');
-                    }
-                },
-                removeItem: (name: string) => localStorage.removeItem(name),
+                getItem: async (name: string) => (await idbGet(name)) ?? null,
+                setItem: async (name: string, value: string) => await idbSet(name, value),
+                removeItem: async (name: string) => await idbDel(name),
             })),
             partialize: (state) => ({
                 rotas: state.rotas,
                 rotasDeHoje: state.rotasDeHoje,
+                clientesRota: state.clientesRota,
+                deliveriesPorRota: state.deliveriesPorRota,
                 lastFetchTodaysRoutes: state.lastFetchTodaysRoutes,
                 lastFetchRotas: state.lastFetchRotas,
                 lastFetchDate: state.lastFetchDate,
             }),
+            skipHydration: true,
         }
     )
 );
