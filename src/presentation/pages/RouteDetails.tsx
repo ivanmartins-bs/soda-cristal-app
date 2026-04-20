@@ -117,6 +117,9 @@ const MemoizedDeliveryCard = memo(
     openGPS,
     clientesRota,
   }: DeliveryCardProps) => {
+    const visualDiasSemAtendimento = statusData?.checkInStatus ? 0 : (delivery.diasSemAtendimento ?? 0);
+    const visualDiasSemConsumo = statusData?.hadSale ? 0 : (delivery.diasSemConsumo ?? 0);
+
     return (
       <Card
         className={`hover:shadow-lg transition-all duration-200 border-2 ${
@@ -207,7 +210,7 @@ const MemoizedDeliveryCard = memo(
               >
                 <UserX className="w-3 h-3 text-red-400" />
                 <span className="text-xs text-muted-foreground">
-                  {delivery.diasSemAtendimento ?? 0} dias s/ atendimento
+                  {visualDiasSemAtendimento} dias s/ atendimento
                 </span>
               </div>
               <div
@@ -216,7 +219,7 @@ const MemoizedDeliveryCard = memo(
               >
                 <ShoppingCart className="w-3 h-3 text-yellow-500" />
                 <span className="text-xs text-muted-foreground">
-                  {delivery.diasSemConsumo ?? 0} dias s/ consumo
+                  {visualDiasSemConsumo} dias s/ consumo
                 </span>
               </div>
               {delivery.tipoCliente === "revendedor" && (
