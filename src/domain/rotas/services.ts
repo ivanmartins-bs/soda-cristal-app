@@ -82,9 +82,9 @@ export const rotasService = {
 
         for (const id of rotaIds) {
             const clientes = await rotasApiService.fetchRotasEntregasPorRota(id);
-            porRota[id] = clientes.sort(
-                (a, b) => a.rotaentrega.sequencia - b.rotaentrega.sequencia
-            );
+            porRota[id] = clientes
+                .filter(c => c.cliente.ativo === 1)
+                .sort((a, b) => a.rotaentrega.sequencia - b.rotaentrega.sequencia);
         }
 
         const flat = Object.values(porRota)
@@ -99,7 +99,9 @@ export const rotasService = {
      */
     async getClientesPorRota(rotaId: number): Promise<RotaEntregaCompleta[]> {
         const clientes = await rotasApiService.fetchRotasEntregasPorRota(rotaId);
-        return clientes.sort((a, b) => a.rotaentrega.sequencia - b.rotaentrega.sequencia);
+        return clientes
+            .filter(c => c.cliente.ativo === 1)
+            .sort((a, b) => a.rotaentrega.sequencia - b.rotaentrega.sequencia);
     },
 
     /**
