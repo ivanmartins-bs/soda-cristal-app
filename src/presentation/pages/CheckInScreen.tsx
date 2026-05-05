@@ -13,7 +13,7 @@ import { calculateDistance } from '../../shared/utils/location';
 interface CheckInScreenProps {
   delivery?: any;
   onBack: () => void;
-  onCheckInComplete?: (delivery: any, status: CheckInStatus, hadSale: boolean) => void;
+  onCheckInComplete?: (delivery: any, status: CheckInStatus, hadSale: boolean, coordinates?: { latitude: string | number, longitude: string | number }) => void;
 }
 
 export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInScreenProps) {
@@ -58,11 +58,15 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
         return;
       }
 
-      const vendedorId = parseInt(vendedorIdStr);
-      const rotaEntregaId = parseInt(String(delivery.id).replace('del-', '')) || 0;
       const [lat, lng] = currentLocation.split(', ');
-      const nowFormatted = formatCheckInApiDate(new Date());
+      const latitude = Number(lat);
+      const longitude = Number(lng);
+      const hasValidCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
 
+      if (!hasValidCoordinates) {
+        toast.error('Localização inválida. Ative o GPS e tente novamente.');
+        return;
+      }
       // Validação de Geofencing (Raio de 50 metros)
       if (delivery.latitude && delivery.longitude) {
         const destLat = parseFloat(delivery.latitude);
@@ -87,21 +91,7 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
         }
       }
 
-      // Registro de presença (check-in inicial)
-      const presenca = await checkInService.registrarPresenca(
-        vendedorId,
-        rotaEntregaId,
-        delivery.clienteId,
-        nowFormatted,
-        Number(lat),
-        Number(lng)
-      );
-
-      if (presenca.queued) {
-        toast.info('Sem conexão: presença salva e será enviada ao reconectar.');
-      }
-
-      // Show status selection screen
+      // Show status selection screen (No more registrarPresenca call here)
       setShowStatusSelection(true);
 
     } catch (error) {
@@ -115,7 +105,7 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
     if (status === 'delivered') {
       setSelectedStatus(status);
       // setShowSaleDecision(true);
-      handleSaleDecision(true);
+      handleSaleDecision(true, status);
     } else {
       // For absent statuses, finish immediately without sale
       finishCheckIn(status, false);
@@ -187,9 +177,19 @@ export function CheckInScreen({ delivery, onBack, onCheckInComplete }: CheckInSc
     }
   };
 
-  const handleSaleDecision = (hasSale: boolean) => {
-    if (!selectedStatus) return;
-    finishCheckIn(selectedStatus, hasSale);
+  const handleSaleDecision = (hasSale: boolean, statusOverride?: CheckInStatus) => {
+    const status = statusOverride || selectedStatus;
+    if (!status) return;
+
+    // Se for entrega com venda, o PDV será responsável por finalizar o check-in com a quantidade correta
+    if (status === 'delivered' && hasSale) {
+      if (onCheckInComplete && delivery) {
+        const [lat, lng] = currentLocation.split(', ');
+        onCheckInComplete(delivery, status, true, { latitude: lat, longitude: lng });
+      }
+    } else {
+      finishCheckIn(status, hasSale);
+    }
   };
 
   // const getStatusInfo = (status?: string) => {

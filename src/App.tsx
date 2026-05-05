@@ -1,7 +1,7 @@
 import { useUserStore } from "./domain/auth/userStore";
 import { useUiStore } from "./shared/store/uiStore";
 import { useDeliveryStore } from "./domain/deliveries/deliveryStore";
-import { useRotasStore } from "./domain/rotas/rotasStore";
+import { useRotasStore, deriveClientesRota } from "./domain/rotas/rotasStore";
 import { useOutboxStore } from "./domain/sync/outboxStore";
 import { useSyncStore, pullCriticalDataAfterReconnect } from "./domain/sync/syncStore";
 import { flushOutbox } from "./domain/sync/flushOutbox";
@@ -9,7 +9,7 @@ import { syncNetworkFromNavigator } from "./shared/store/networkStore";
 import { PendingSyncBanner } from "./presentation/components/PendingSyncBanner";
 import { Toaster } from "./shared/ui/sonner";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import React, { useEffect, lazy, Suspense } from "react";
+import React, { useEffect, lazy, Suspense, useState } from "react";
 import { LoginScreen } from "./presentation/pages/LoginScreen";
 import { BottomNavigation } from "./presentation/components/BottomNavigation";
 import { PageLoader } from "./presentation/components/ui/PageLoader";
@@ -67,6 +67,7 @@ export default function App() {
   const updateDeliveryStatus = useDeliveryStore(s => s.updateDeliveryStatus);
 
   const navigate = useNavigate();
+  const [checkInCoords, setCheckInCoords] = useState<{ latitude: string | number, longitude: string | number } | null>(null);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -86,7 +87,11 @@ export default function App() {
       useOutboxStore.persist.rehydrate(),
       useSyncStore.persist.rehydrate(),
     ]).then(() => {
-      if (!cancelled) setHasHydratedFromStorage(true);
+      if (!cancelled) {
+        useDeliveryStore.getState().cleanupOldStatuses();
+        deriveClientesRota();
+        setHasHydratedFromStorage(true);
+      }
     });
     return () => {
       cancelled = true;
@@ -227,7 +232,7 @@ export default function App() {
                 <CheckInScreen
                   delivery={selectedDelivery}
                   onBack={() => navigate("/routes/details")}
-                  onCheckInComplete={(delivery: Delivery, status: CheckInStatus, hadSale: boolean) => {
+                  onCheckInComplete={(delivery: Delivery, status: CheckInStatus, hadSale: boolean, coords?: any) => {
                     // Update delivery status
                     updateDeliveryStatus(delivery.id, {
                       checkInStatus: status,
@@ -236,8 +241,10 @@ export default function App() {
                     });
 
                     if (hadSale) {
+                      setCheckInCoords(coords || null);
                       navigate("/pdv/delivery");
                     } else {
+                      setCheckInCoords(null);
                       navigate("/routes/details");
                     }
                   }}
@@ -299,8 +306,13 @@ export default function App() {
               path="/pdv/delivery"
               element={
                 <PDVStandalone
-                  delivery={selectedDelivery}
-                  onBack={() => navigate("/routes/details")}
+                  delivery={selectedDelivery || undefined}
+                  isFinishingCheckIn={!!checkInCoords}
+                  checkInCoordinates={checkInCoords}
+                  onBack={() => {
+                    setCheckInCoords(null);
+                    navigate("/routes/details");
+                  }}
                 />
               }
             />
