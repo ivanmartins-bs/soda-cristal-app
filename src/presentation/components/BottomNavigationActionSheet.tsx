@@ -1,10 +1,9 @@
-import { useState, type ComponentType } from "react";
+import { type ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ClipboardList,
   FileUp,
   Handshake,
-  LogOut,
   PlusCircle,
   Route,
   Send,
@@ -20,17 +19,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "../../shared/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../../shared/ui/alert-dialog";
-import { useUserStore } from "../../domain/auth/userStore";
 
 interface BottomNavigationActionSheetProps {
   isOpen: boolean;
@@ -49,8 +37,6 @@ export function BottomNavigationActionSheet({
   onOpenChange,
 }: BottomNavigationActionSheetProps) {
   const navigate = useNavigate();
-  const logout = useUserStore((state) => state.logout);
-  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
   function navigateAndClose(path: string): void {
     onOpenChange(false);
@@ -60,12 +46,6 @@ export function BottomNavigationActionSheet({
   function showNotImplementedFeature(label: string): void {
     onOpenChange(false);
     toast.info(`${label} será disponibilizado em breve.`);
-  }
-
-  function handleLogout(): void {
-    setIsLogoutConfirmOpen(false);
-    onOpenChange(false);
-    logout();
   }
 
   const actions: MenuAction[] = [
@@ -148,40 +128,9 @@ export function BottomNavigationActionSheet({
               );
             })}
 
-            <Button
-              variant="ghost"
-              className="h-14 justify-start rounded-none border-b px-4 text-sm font-normal text-red-600 hover:text-red-700"
-              onClick={() => setIsLogoutConfirmOpen(true)}
-            >
-              <LogOut className="mr-3 h-4 w-4" />
-              Sair
-            </Button>
           </div>
         </SheetContent>
       </Sheet>
-
-      <AlertDialog
-        open={isLogoutConfirmOpen}
-        onOpenChange={setIsLogoutConfirmOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deseja realmente sair?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você encerrará sua sessão atual e voltará para a tela de login.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handleLogout}
-            >
-              Sair agora
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
