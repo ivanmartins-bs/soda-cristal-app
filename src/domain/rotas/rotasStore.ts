@@ -425,3 +425,21 @@ export const useRotasStore = create<RotasState>()(
     },
   ),
 );
+
+/**
+ * Função utilitária para reconstruir a lista global de clientes (clientesRota)
+ * a partir das rotas de hoje e do mapa de deliveries. Útil após a reidratação.
+ */
+export function deriveClientesRota(): void {
+  const s = useRotasStore.getState();
+  if (!s.rotasDeHoje || s.rotasDeHoje.length === 0) {
+    if (s.clientesRota.length > 0) useRotasStore.setState({ clientesRota: [] });
+    return;
+  }
+  const all: RotaEntregaCompleta[] = [];
+  s.rotasDeHoje.forEach((r) => {
+    const clients = s.deliveriesPorRota[r.id];
+    if (clients) all.push(...clients);
+  });
+  useRotasStore.setState({ clientesRota: all });
+}
