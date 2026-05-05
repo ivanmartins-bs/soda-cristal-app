@@ -67,6 +67,7 @@ export default function App() {
   const updateDeliveryStatus = useDeliveryStore(s => s.updateDeliveryStatus);
 
   const navigate = useNavigate();
+  const [checkInCoords, setCheckInCoords] = useState<{ latitude: string | number, longitude: string | number } | null>(null);
 
   useEffect(() => {
     if (!isInitialized) {
@@ -231,7 +232,7 @@ export default function App() {
                 <CheckInScreen
                   delivery={selectedDelivery}
                   onBack={() => navigate("/routes/details")}
-                  onCheckInComplete={(delivery: Delivery, status: CheckInStatus, hadSale: boolean) => {
+                  onCheckInComplete={(delivery: Delivery, status: CheckInStatus, hadSale: boolean, coords?: any) => {
                     // Update delivery status
                     updateDeliveryStatus(delivery.id, {
                       checkInStatus: status,
@@ -240,8 +241,10 @@ export default function App() {
                     });
 
                     if (hadSale) {
+                      setCheckInCoords(coords || null);
                       navigate("/pdv/delivery");
                     } else {
+                      setCheckInCoords(null);
                       navigate("/routes/details");
                     }
                   }}
@@ -304,7 +307,12 @@ export default function App() {
               element={
                 <PDVStandalone
                   delivery={selectedDelivery}
-                  onBack={() => navigate("/routes/details")}
+                  isFinishingCheckIn={!!checkInCoords}
+                  checkInCoordinates={checkInCoords}
+                  onBack={() => {
+                    setCheckInCoords(null);
+                    navigate("/routes/details");
+                  }}
                 />
               }
             />
