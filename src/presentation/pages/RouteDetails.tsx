@@ -117,8 +117,12 @@ const MemoizedDeliveryCard = memo(
     openGPS,
     clientesRota,
   }: DeliveryCardProps) => {
-    const visualDiasSemAtendimento = statusData?.checkInStatus ? 0 : (delivery.diasSemAtendimento ?? 0);
-    const visualDiasSemConsumo = statusData?.hadSale ? 0 : (delivery.diasSemConsumo ?? 0);
+    const visualDiasSemAtendimento = statusData?.checkInStatus
+      ? 0
+      : delivery.diasSemAtendimento ?? 0;
+    const visualDiasSemConsumo = statusData?.hadSale
+      ? 0
+      : delivery.diasSemConsumo ?? 0;
 
     return (
       <Card
@@ -276,7 +280,10 @@ const MemoizedDeliveryCard = memo(
           <div className="flex items-center space-x-2">
             <Droplets className="w-4 h-4 text-blue-500" />
             <span className="text-sm font-medium">
-              {delivery.bottles.quantity} garrafas de {delivery.bottles.size}
+              {statusData?.reposicaoQty !== undefined
+                ? statusData.reposicaoQty
+                : delivery.bottles.quantity}{" "}
+              garrafas de {delivery.bottles.size}
             </span>
           </div>
 
@@ -434,7 +441,8 @@ const MemoizedDeliveryCard = memo(
       prevProps.checkInStatus?.label === nextProps.checkInStatus?.label &&
       prevProps.statusData?.checkInStatus ===
         nextProps.statusData?.checkInStatus &&
-      prevProps.statusData?.hadSale === nextProps.statusData?.hadSale
+      prevProps.statusData?.hadSale === nextProps.statusData?.hadSale &&
+      prevProps.statusData?.reposicaoQty === nextProps.statusData?.reposicaoQty
     );
   },
 );
