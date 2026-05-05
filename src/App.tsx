@@ -86,7 +86,11 @@ export default function App() {
       useOutboxStore.persist.rehydrate(),
       useSyncStore.persist.rehydrate(),
     ]).then(() => {
-      if (!cancelled) setHasHydratedFromStorage(true);
+      if (!cancelled) {
+        useDeliveryStore.getState().cleanupOldStatuses();
+        deriveClientesRota();
+        setHasHydratedFromStorage(true);
+      }
     });
     return () => {
       cancelled = true;
