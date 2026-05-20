@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { RotaEntregaCompleta } from '../../domain/rotas/models';
 import { clientesServices } from '../../domain/clientes/services';
 import type { ClienteCadastroPayload } from '../../domain/clientes/model';
+import { maskPhone, maskCpfCnpj, maskCep, maskDate } from '../../shared/utils/maskUtils';
 
 interface ClienteEditSheetProps {
   open: boolean;
@@ -24,10 +25,13 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
   // Form state inicializado com dados do cliente
   const [nome, setNome] = useState('');
   const [cpfCnpj, setCpfCnpj] = useState('');
+  const [rg, setRg] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
   const [telefone, setTelefone] = useState('');
   const [telefone2, setTelefone2] = useState('');
   const [rua, setRua] = useState('');
   const [numero, setNumero] = useState('');
+  const [complemento, setComplemento] = useState('');
   const [bairro, setBairro] = useState('');
   const [cep, setCep] = useState('');
   const [observacao, setObservacao] = useState('');
@@ -44,13 +48,25 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
   const populateForm = () => {
     if (!cliente) return;
     setNome(cliente.cliente.nome || '');
-    setCpfCnpj(cliente.cliente.cpf_cnpj || String((cliente.cliente as any).cpfcnpj || ''));
-    setTelefone(cliente.cliente.celular || '');
-    setTelefone2(cliente.cliente.celular2 || '');
+    setCpfCnpj(maskCpfCnpj(cliente.cliente.cpf_cnpj || String((cliente.cliente as any).cpfcnpj || '')));
+    setRg(String((cliente.cliente as any).rg || ''));
+    
+    let initialDate = (cliente.cliente as any).datanasc || '';
+    if (initialDate.includes('-') && initialDate.length === 10) {
+      const parts = initialDate.split('-');
+      if (parts[0].length === 4) {
+        initialDate = `${parts[2]}/${parts[1]}/${parts[0]}`; // YYYY-MM-DD to DD/MM/YYYY
+      }
+    }
+    setDataNascimento(maskDate(initialDate));
+    
+    setTelefone(maskPhone(cliente.cliente.celular || ''));
+    setTelefone2(maskPhone(cliente.cliente.celular2 || ''));
     setRua(cliente.cliente.rua || '');
-    setNumero(cliente.cliente.numero || '');
+    setNumero(String(cliente.cliente.numero || ''));
+    setComplemento(cliente.cliente.complemento || '');
     setBairro(cliente.cliente.bairro || '');
-    setCep(cliente.cliente.cep || '');
+    setCep(maskCep(String(cliente.cliente.cep || '')));
     setObservacao(cliente.cliente.observacao || '');
     setNumGarrafas(cliente.rotaentrega.num_garrafas || 0);
     setNumGarrafasComprada(cliente.rotaentrega.num_garrafas_comprada || 0);
@@ -59,7 +75,7 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
     setCfAgua(Boolean(cliente.cliente.cf_agua));
     setCfXarope(Boolean(cliente.cliente.cf_xarope));
     setPeAgua(Boolean(cliente.cliente.precoespecial_agua));
-    setPeXarope(Boolean(cliente.cliente.precoespecial_xarope));
+    setPeXarope(Boolean((cliente.cliente as any).precoespecial_xarope || (cliente.cliente as any).xarope_preco_especial));
   };
 
   useEffect(() => {
@@ -85,11 +101,18 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
     try {
       const vendedorId = Number(localStorage.getItem('vendedorId')) || 0;
 
+      let apiDataNascimento = '';
+      if (dataNascimento.length === 10) {
+        // DD/MM/YYYY -> YYYY-MM-DD
+        const [day, month, year] = dataNascimento.split('/');
+        apiDataNascimento = `${year}-${month}-${day}`;
+      }
+
       const payload: ClienteCadastroPayload = {
-        id: 0,
-        rg: '',
-        data_nascimento: '',
-        complemento: '',
+        id: cliente.cliente.id,
+        rg: rg,
+        data_nascimento: apiDataNascimento,
+        complemento: complemento,
         nome,
         cpf_cnpj: cpfCnpj,
         telefone,
@@ -155,16 +178,26 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="edit-cpf">CPF/CNPJ {numGarrafasComprada > 0 ? '(opcional)' : '*'}</Label>
-                  <Input id="edit-cpf" value={cpfCnpj} onChange={(e) => setCpfCnpj(e.target.value)} className="border border-gray-300" />
+                  <Input id="edit-cpf" value={cpfCnpj} onChange={(e) => setCpfCnpj(maskCpfCnpj(e.target.value))} className="border border-gray-300" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="edit-rg">RG</Label>
+                    <Input id="edit-rg" value={rg} onChange={(e) => setRg(e.target.value)} className="border border-gray-300" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="edit-datanasc">Data de Nascimento</Label>
+                    <Input id="edit-datanasc" value={dataNascimento} onChange={(e) => setDataNascimento(maskDate(e.target.value))} className="border border-gray-300" placeholder="DD/MM/AAAA" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="edit-tel1">Telefone</Label>
-                    <Input id="edit-tel1" value={telefone} onChange={(e) => setTelefone(e.target.value)} className="border border-gray-300" />
+                    <Input id="edit-tel1" value={telefone} onChange={(e) => setTelefone(maskPhone(e.target.value))} className="border border-gray-300" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="edit-tel2">Telefone 2</Label>
-                    <Input id="edit-tel2" value={telefone2} onChange={(e) => setTelefone2(e.target.value)} className="border border-gray-300" />
+                    <Input id="edit-tel2" value={telefone2} onChange={(e) => setTelefone2(maskPhone(e.target.value))} className="border border-gray-300" />
                   </div>
                 </div>
               </div>
@@ -180,18 +213,24 @@ export function ClienteEditSheet({ open, onOpenChange, cliente, onSaved }: Clien
                   <Label htmlFor="edit-rua">Rua</Label>
                   <Input id="edit-rua" value={rua} onChange={(e) => setRua(e.target.value)} className="border border-gray-300" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="edit-numero">Nº</Label>
                     <Input id="edit-numero" value={numero} onChange={(e) => setNumero(e.target.value)} className="border border-gray-300" />
                   </div>
+                  <div className="space-y-1.5 sm:col-span-3">
+                    <Label htmlFor="edit-complemento">Complemento</Label>
+                    <Input id="edit-complemento" value={complemento} onChange={(e) => setComplemento(e.target.value)} className="border border-gray-300" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="edit-bairro">Bairro</Label>
                     <Input id="edit-bairro" value={bairro} onChange={(e) => setBairro(e.target.value)} className="border border-gray-300" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="edit-cep">CEP</Label>
-                    <Input id="edit-cep" value={cep} onChange={(e) => setCep(e.target.value)} className="border border-gray-300" />
+                    <Input id="edit-cep" value={cep} onChange={(e) => setCep(maskCep(e.target.value))} className="border border-gray-300" />
                   </div>
                 </div>
               </div>
