@@ -1,0 +1,76 @@
+# Plano de Implementação: Adequação de Campos e Máscaras (Edição de Clientes)
+
+Este documento detalha a análise comparativa entre o envio de dados do projeto antigo (Android) e o novo (Web/React) e propõe a padronização e correção da formatação dos dados.
+
+## Análise Comparativa dos Campos Enviados
+
+Ao comparar o payload gerado em `PostCadastroClienteAsyncTask.java` (Antigo) com `ClienteEditSheet.tsx` (Novo), os seguintes comportamentos foram identificados:
+
+### 1. Campos que precisam de Formatação (Máscaras)
+O backend espera receber esses campos **COM MÁSCARA**, pois era assim que o app antigo enviava. Na Web atual, estão sendo enviados puros (apenas números).
+
+| Campo no Payload | Projeto Antigo (Enviado) | Projeto Novo (Web) | Solução Proposta |
+| :--- | :--- | :--- | :--- |
+| `telefone` | `(13) 98140-0137` | `981400137` | Aplicar máscara `(##) #####-####` |
+| `telefone2` | `(13) 98140-0137` | `981400137` | Aplicar máscara `(##) #####-####` |
+| `cpf_cnpj` | `111.222.333-44` ou `11.222.333/0001-44` | `11122233344` | Aplicar máscara dinâmica de CPF ou CNPJ |
+| `cep` | `11330-000` | `11330000` | Aplicar máscara `#####-###` |
+
+### 2. Campos Ausentes na Interface Web
+No app antigo havia inputs para esses campos, mas no componente `ClienteEditSheet.tsx` eles estão sendo enviados com valor chumbado `''` (vazio). Precisamos definir se vamos inseri-los no layout ou manter ocultos.
+
+| Campo | Como a Web envia hoje | Como o App Antigo enviava |
+| :--- | :--- | :--- |
+| `rg` | `''` | Input de RG do usuário |
+| `data_nascimento` | `''` | Convertido para `yyyy-MM-dd` |
+| `complemento` | `''` | Input de complemento de endereço |
+| `dia_reposicao` | `''` | Selecionado pelo usuário |
+
+> [!WARNING]
+> Enviar esses campos como string vazia `''` em uma Alteração (tipo_cadastro = 2) pode fazer com que o backend apague (zere) a data de nascimento, RG ou complemento que o cliente já possuía cadastrado caso a API não tenha proteção contra campos vazios.
+
+### 3. Identificadores do Cliente e Duplicação (Bug de Edição)
+O usuário relatou que, ao tentar editar um cliente na Web, a API está **criando um novo cliente (duplicando)** ao invés de atualizar o existente.
+Isso ocorre muito provavelmente pelo envio do campo `id: 0`.
+
+| Campo | Projeto Antigo (Enviado) | Projeto Novo (Web) | Solução Proposta |
+| :--- | :--- | :--- | :--- |
+| `id` | `52` (ID do SQLite local) | `0` (Hardcoded) | Enviar `id: cliente.cliente.id` |
+| `cliente_id_api` | `56523` (ID Real) | `56523` | Manter correto |
+
+**Por que a duplicação acontece?**
+Em muitos backends (especialmente PHP/Laravel), uma verificação como `if (empty($payload['id']))` é usada para decidir se é uma inserção ou uma atualização. O valor `0` é considerado `empty` (vazio/falso). Como a Web envia `id: 0`, o backend ignora a flag `tipo_cadastro: 2`, acha que é um novo registro e realiza um `INSERT` em vez de `UPDATE`, duplicando o cliente. No app antigo, o `id` enviado era o ID do banco local SQLite (que começava no 1), então nunca era `0`.
+
+---
+
+## Proposed Changes
+
+### src/shared/utils
+#### [NEW] [maskUtils.ts](file:///c:/bystartup/soda-app/src/shared/utils/maskUtils.ts)
+Criar utilitário com funções puras baseadas em Expressões Regulares (Regex) para formatar os inputs enquanto o usuário digita:
+- `maskPhone(value: string)`
+- `maskCpfCnpj(value: string)`
+- `maskCep(value: string)`
+
+---
+
+### src/presentation/components
+#### [MODIFY] [ClienteEditSheet.tsx](file:///c:/bystartup/soda-app/src/presentation/components/ClienteEditSheet.tsx)
+- Importar as funções do `maskUtils.ts`.
+- Aplicar as máscaras nos eventos `onChange` dos respectivos `Inputs` de telefone, telefone 2, cpf/cnpj e cep.
+- Garantir que o state receba o valor mascarado para que o payload já seja construído de forma idêntica ao app antigo.
+
+---
+
+## Open Questions
+
+> [!IMPORTANT]
+> **Sobre os campos ausentes:** Devemos adicionar os campos `RG`, `Data de Nascimento` e `Complemento` no `ClienteEditSheet.tsx`? Se mantivermos eles chumbados como `''` (vazio) no payload de alteração, corremos o risco de a API apagar os dados do cliente caso ele já tenha um RG ou complemento preenchido lá no retaguarda.
+
+## Verification Plan
+
+### Manual Verification
+1. Abrir a tela de rotas, tentar editar o cliente `TESTE NOVO CLIENTE INATIVA`.
+2. Alterar o telefone inserindo apenas números e observar se a máscara `(XX) XXXXX-XXXX` é aplicada na UI.
+3. Clicar em salvar e observar no Network se o payload enviado agora contém o telefone corretamente mascarado.
+4. Validar se o backend agora processa a edição e salva a alteração no banco.
