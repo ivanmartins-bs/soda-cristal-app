@@ -395,7 +395,7 @@ const MemoizedDeliveryCard = memo(
           )}
 
           {checkInStatus && (
-            <div className="pt-2 border-t">
+            <div className="pt-2 border-t space-y-2">
               <div
                 className={`flex items-center justify-center p-3 rounded-lg ${checkInStatus.color}`}
               >
@@ -420,12 +420,52 @@ const MemoizedDeliveryCard = memo(
                   size="sm"
                   className="ml-auto h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    setDeliveryParaDescartar(delivery);
-                    setDescarteSheetOpen(true);
+                     e.stopPropagation();
+                     setDeliveryParaDescartar(delivery);
+                     setDescarteSheetOpen(true);
                   }}
                 >
                   Descartar
+                </Button>
+              </div>
+
+              {/* Ações pós-checkin */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs text-amber-700 border-amber-200 hover:bg-amber-50 h-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const original = clientesRota.find(
+                      (c: any) => c.cliente.id === delivery.clienteId,
+                    );
+                    if (original) {
+                      setClienteParaEditar(original);
+                      setEditSheetOpen(true);
+                    }
+                  }}
+                >
+                  <Edit className="w-3.5 h-3.5 mr-1" />
+                  Editar Cliente
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs text-red-700 border-red-200 hover:bg-red-50 h-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const original = clientesRota.find(
+                      (c: any) => c.cliente.id === delivery.clienteId,
+                    );
+                    if (original) {
+                      setClienteParaDesativar(original);
+                      setDesativarSheetOpen(true);
+                    }
+                  }}
+                >
+                  <UserX className="w-3.5 h-3.5 mr-1" />
+                  Desativar Cliente
                 </Button>
               </div>
             </div>
