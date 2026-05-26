@@ -1,0 +1,52 @@
+# Correção da Atualização Visual de Dias sem Atendimento e Consumo
+
+O problema ocorre porque os valores de "Dias sem atendimento" e "Dias sem consumo" são renderizados de forma estática com os dados que vêm da API, mas eles não são recomputados visualmente quando uma ação é feita no aplicativo na hora. Como o aplicativo armazena as ações de check-in internamente antes de um recarregamento da página (no `statusData`), os contadores do visualização continuavam mostrando os "5000 dias" mesmos após o *check-in* e a *venda*.
+
+## User Review Required
+
+> [!NOTE]
+> A recomputação será **visual** (estado otimista local). Isso significa que, na experiência do usuário, logo após ele clicar e marcar como Check-in e Venda, o contador já vai cair pra **0**. Caso ele dê *refresh* e os dados carreguem do servidor, será o servidor que retornará o zero de forma definitiva.
+
+A regra estruturada será:
+- Se houver qualquer **check-in** (Entregue, Não quis consumir, Ausente) registrado localmente no dia (`statusData?.checkInStatus` for true), o painel de dias **sem atendimento** exibirá **`0`**.
+- Se houver registro de **venda finalizada** no PDV (`statusData?.hadSale` for true), o painel de dias **sem consumo** exibirá **`0`**. Caso contrário, mantém-se intocado. 
+
+## Proposed Changes
+
+---
+
+### UI Presentation
+
+#### [MODIFY] RouteDetails.tsx (file:///c:/bystartup/soda-app/src/presentation/pages/RouteDetails.tsx)
+- No `MemoizedDeliveryCard`, faremos um pequeno *intercept* antes do JSX:
+  ```tsx
+  const visualDiasSemAtendimento = statusData?.checkInStatus ? 0 : (delivery.diasSemAtendimento ?? 0);
+  const visualDiasSemConsumo = statusData?.hadSale ? 0 : (delivery.diasSemConsumo ?? 0);
+  ```
+- E na exibição de ambos contadores:
+  ```tsx
+  <UserX className="w-3 h-3 text-red-400" />
+  <span className="text-xs text-muted-foreground">
+    {visualDiasSemAtendimento} dias s/ atendimento
+  </span>
+  ```
+  ```tsx
+  <ShoppingCart className="w-3 h-3 text-yellow-500" />
+  <span className="text-xs text-muted-foreground">
+    {visualDiasSemConsumo} dias s/ consumo
+  </span>
+  ```
+
+## Open Questions
+
+- A regra pra `filtros.semAtendimento` e `filtros.semConsumo` (que atualmente remove da lista clientes que tiveram dias zerados) também deve olhar pra esse estado e sumir com os cards que o usuário já atendeu proaktifamente agora? Ou o melhor é focar apenas nos crachás (cards)? No momento focarei apenas na renderização da Badge visual no canto superior.
+
+## Verification Plan
+
+### Automated Tests
+- Testar que a visualização recarrega sem syntax error.
+
+### Manual Verification
+- Visualizar um cliente que tenha X dias sem consumo e atendimento.
+- Fazer checkin como "Não Quis Consumir". O contador do atendimento vai para 0. O do consumo não.
+- Finalizar Venda no PDV pra esse mesmo cliente. O contador do consumo vai para 0 também.

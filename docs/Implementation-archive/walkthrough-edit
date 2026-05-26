@@ -1,0 +1,30 @@
+# Resumo da Implementação: Máscaras e Edição de Clientes
+
+A implementação de correção na edição de clientes foi concluída com sucesso! Os principais problemas (envio de dados crus sem formatação e a duplicação no banco) foram tratados seguindo o Tech Design Doc.
+
+## O que foi Feito
+
+### 1. Novo Utilitário de Máscaras
+Criamos o arquivo `maskUtils.ts` responsável por conter funções de conversão e formatação via Regex, espelhando o comportamento que o aplicativo Android antigo tinha.
+
+#### [NEW] [maskUtils.ts](file:///c:/bystartup/soda-app/src/shared/utils/maskUtils.ts)
+- `maskPhone()`: Formata celulares e telefones `(XX) XXXXX-XXXX`.
+- `maskCpfCnpj()`: Aplica pontuação em CPFs `XXX.XXX.XXX-XX` e CNPJs.
+- `maskCep()`: Formata CEPs `XXXXX-XXX`.
+- `maskDate()`: Aplica formato visual de data `DD/MM/YYYY`.
+
+### 2. Atualização na Interface (ClienteEditSheet)
+Fizemos melhorias significativas no componente de edição:
+
+#### [MODIFY] [ClienteEditSheet.tsx](file:///c:/bystartup/soda-app/src/presentation/components/ClienteEditSheet.tsx)
+- **Máscaras ao Digitar:** Agora, sempre que o usuário altera CPF/CNPJ, CEP, Telefone ou Data de Nascimento, o state guarda o valor já formatado, para que seja enviado à API exatamente do modo esperado.
+- **Novos Campos Inseridos:** O formulário da aba de "Dados Pessoais" e "Endereço" agora exibe e captura o `RG`, `Data de Nascimento` (com tradução correta para `YYYY-MM-DD` no payload) e o `Complemento`. 
+- **Correção da Duplicação (Bug Crítico):** O grande ofensor da duplicação de clientes era a flag `id: 0` chumbada no código. Essa linha foi substituída por `id: cliente.cliente.id`. Agora a API entende explicitamente que se trata de uma atualização, já que o ID não está mais "vazio", e para de fazer o `INSERT` (criação de um novo cliente clonado).
+
+## Como Validar as Mudanças
+
+> [!TIP]
+> Você pode abrir a tela do painel Web e tentar editar novamente um cliente, como o "TESTE NOVO CLIENTE INATIVA".
+> 1. Observe como os campos (CPF, Telefone, CEP) se formatam automaticamente conforme você digita.
+> 2. Salve a edição.
+> 3. Atualize a lista e certifique-se de que nenhum cliente "NOVO" apareceu e que a alteração fixou no registro atual!
