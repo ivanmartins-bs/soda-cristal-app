@@ -175,7 +175,7 @@ const MemoizedDeliveryCard = memo(
                 </span>
                 <span className="font-medium text-green-700">-</span>
                 <span className="font-medium text-green-700">{route.zone}</span>
-                <span className="font-medium text-green-700">•</span>
+                <span className="font-medium text-green-700">ÔÇó</span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   Hoje
@@ -277,6 +277,31 @@ const MemoizedDeliveryCard = memo(
             )}
           </div>
 
+          {delivery.customerPhone2 && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Phone className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {formatPhone(delivery.customerPhone2)} <span className="text-xs text-muted-foreground/70">(Opcional)</span>
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (delivery.customerPhone2) {
+                    handleWhatsApp(delivery.customerPhone2);
+                  }
+                }}
+              >
+                <MessageCircle className="w-4 h-4 mr-1" />
+                <span className="text-xs">WhatsApp</span>
+              </Button>
+            </div>
+          )}
+
           <div className="flex items-center space-x-2">
             <Droplets className="w-4 h-4 text-blue-500" />
             <span className="text-sm font-medium">
@@ -298,12 +323,12 @@ const MemoizedDeliveryCard = memo(
                 }}
               >
                 <p className="text-sm" style={{ color: "#92400e" }}>
-                  <strong>Observação:</strong> {delivery.notes}
+                  <strong>Observa├º├úo:</strong> {delivery.notes}
                 </p>
               </div>
             )}
 
-          {/* Botão Traçar Rota no GPS (usa lat/lng se disponível) */}
+          {/* Bot├úo Tra├ºar Rota no GPS (usa lat/lng se dispon├¡vel) */}
           <Button
             variant="outline"
             className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
@@ -313,7 +338,7 @@ const MemoizedDeliveryCard = memo(
             }}
           >
             <MapPin className="w-4 h-4 mr-2" />
-            Traçar Rota no GPS
+            Tra├ºar Rota no GPS
           </Button>
 
           {!checkInStatus && !statusData?.checkInStatus && (
@@ -324,7 +349,7 @@ const MemoizedDeliveryCard = memo(
                     className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm font-medium"
                     onClick={() => setSelectedDelivery(delivery)}
                   >
-                    Ações do Cliente
+                    A├º├Áes do Cliente
                   </button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="h-auto p-4">
@@ -413,7 +438,7 @@ const MemoizedDeliveryCard = memo(
                   {checkInStatus.label}
                 </span>
                 {statusData?.hadSale && (
-                  <span className="ml-2 text-xs">💰</span>
+                  <span className="ml-2 text-xs">­ƒÆ░</span>
                 )}
                 <Button
                   variant="ghost"
@@ -429,7 +454,7 @@ const MemoizedDeliveryCard = memo(
                 </Button>
               </div>
 
-              {/* Ações pós-checkin */}
+              {/* A├º├Áes p├│s-checkin */}
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -477,6 +502,12 @@ const MemoizedDeliveryCard = memo(
   (prevProps, nextProps) => {
     return (
       prevProps.delivery.id === nextProps.delivery.id &&
+      prevProps.delivery.customerName === nextProps.delivery.customerName &&
+      prevProps.delivery.customerPhone === nextProps.delivery.customerPhone &&
+      prevProps.delivery.customerPhone2 === nextProps.delivery.customerPhone2 &&
+      prevProps.delivery.address === nextProps.delivery.address &&
+      prevProps.delivery.notes === nextProps.delivery.notes &&
+      prevProps.delivery.bottles.quantity === nextProps.delivery.bottles.quantity &&
       prevProps.delivery.tipoCliente === nextProps.delivery.tipoCliente &&
       prevProps.checkInStatus?.label === nextProps.checkInStatus?.label &&
       prevProps.statusData?.checkInStatus ===
@@ -573,7 +604,7 @@ export function RouteDetails({
     });
   };
 
-  // Busca avançada + filtros estratégicos
+  // Busca avan├ºada + filtros estrat├®gicos
   const filteredDeliveries = useMemo(() => {
     let resultado = deliveries;
 
@@ -587,7 +618,7 @@ export function RouteDetails({
       );
     }
 
-    // Filtros estratégicos
+    // Filtros estrat├®gicos
     const temFiltroAtivo = Object.values(filtros).some(Boolean);
     if (temFiltroAtivo) {
       resultado = resultado.filter((d) => {
@@ -611,7 +642,7 @@ export function RouteDetails({
       <div className="flex flex-col items-center justify-center h-screen space-y-4">
         <p className="text-muted-foreground">Nenhuma rota selecionada.</p>
         <Button onClick={onBack} variant="outline">
-          Voltar para Início
+          Voltar para In├¡cio
         </Button>
       </div>
     );
@@ -646,7 +677,7 @@ export function RouteDetails({
           color: "bg-gray-100 border-gray-300",
           textColor: "text-gray-800",
           badgeColor: "bg-gray-600 text-white",
-          label: "Não quis consumir",
+          label: "N├úo quis consumir",
           icon: UserX,
         };
       case "absent-return":
@@ -662,7 +693,7 @@ export function RouteDetails({
           color: "bg-red-100 border-red-300",
           textColor: "text-red-800",
           badgeColor: "bg-red-600 text-white",
-          label: "Ausente - Não retornar",
+          label: "Ausente - N├úo retornar",
           icon: UserX,
         };
       default:
@@ -670,7 +701,7 @@ export function RouteDetails({
     }
   };
 
-  // Uma entrega é "pendente" se não tiver checkInStatus registrado
+  // Uma entrega ├® "pendente" se n├úo tiver checkInStatus registrado
   const pendingDeliveries = filteredDeliveries.filter(
     (d) => !deliveryStatuses[d.id]?.checkInStatus,
   );
@@ -686,7 +717,7 @@ export function RouteDetails({
         "_blank",
       );
     } else {
-      // Fallback: busca pelo endereço em texto
+      // Fallback: busca pelo endere├ºo em texto
       const query = encodeURIComponent(delivery.address);
       window.open(
         `https://www.google.com/maps/search/?api=1&query=${query}`,
@@ -697,9 +728,9 @@ export function RouteDetails({
 
   const handleWhatsApp = (phone: string) => {
     if (!phone) return;
-    // Remove tudo que não é dígito
+    // Remove tudo que n├úo ├® d├¡gito
     const cleanPhone = phone.replace(/\D/g, "");
-    // Garante que tem o DDI 55 (Brasil) se não tiver
+    // Garante que tem o DDI 55 (Brasil) se n├úo tiver
     const withCountryCode =
       cleanPhone.length <= 11 ? `55${cleanPhone}` : cleanPhone;
     window.open(`https://wa.me/${withCountryCode}`, "_blank");
@@ -762,16 +793,16 @@ export function RouteDetails({
             <p className="text-lg" style={{ color: "#10b981" }}>
               {completedDeliveries.length}
             </p>
-            <p className="text-xs text-muted-foreground">Concluídas</p>
+            <p className="text-xs text-muted-foreground">Conclu├¡das</p>
           </div>
         </div>
 
-        {/* Busca Avançada + Filtros */}
+        {/* Busca Avan├ºada + Filtros */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome, rua ou número..."
+              placeholder="Buscar por nome, rua ou n├║mero..."
               value={searchTerm}
               onChange={(e) =>
                 useRotasStore.getState().setSearchTerm(route.id, e.target.value)
@@ -796,16 +827,16 @@ export function RouteDetails({
             </SheetTrigger>
             <SheetContent side="bottom" className="h-auto">
               <SheetHeader>
-                <SheetTitle>Filtros Estratégicos</SheetTitle>
+                <SheetTitle>Filtros Estrat├®gicos</SheetTitle>
                 <SheetDescription>
-                  Identifique clientes que precisam de atenção
+                  Identifique clientes que precisam de aten├º├úo
                 </SheetDescription>
               </SheetHeader>
               <div className="space-y-4 my-6">
-                {/* Grupo: Por período sem atendimento */}
+                {/* Grupo: Por per├¡odo sem atendimento */}
                 <div>
                   <p className="text-sm font-semibold text-muted-foreground mb-2">
-                    Por período sem atendimento
+                    Por per├¡odo sem atendimento
                   </p>
                   <div className="space-y-2">
                     <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors">
@@ -820,14 +851,14 @@ export function RouteDetails({
                           15 a 29 dias
                         </span>
                         <p className="text-xs text-muted-foreground">
-                          Clientes com atenção moderada
+                          Clientes com aten├º├úo moderada
                         </p>
                       </div>
                       <Badge
                         variant="outline"
                         className="text-orange-600 border-orange-300 bg-orange-50"
                       >
-                        Atenção
+                        Aten├º├úo
                       </Badge>
                     </label>
                     <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors">
@@ -847,7 +878,7 @@ export function RouteDetails({
                         variant="outline"
                         className="text-red-600 border-red-300 bg-red-50"
                       >
-                        Crítico
+                        Cr├¡tico
                       </Badge>
                     </label>
                   </div>
@@ -894,7 +925,7 @@ export function RouteDetails({
                   </div>
                 </div>
 
-                {/* Ações */}
+                {/* A├º├Áes */}
                 <div className="flex gap-2 pt-2">
                   <Button
                     variant="outline"
@@ -1015,7 +1046,7 @@ export function RouteDetails({
         )}
       </div>
 
-      {/* Sheet de Edição de Cliente (R4) */}
+      {/* Sheet de Edi├º├úo de Cliente (R4) */}
       <ClienteEditSheet
         open={editSheetOpen}
         onOpenChange={setEditSheetOpen}
@@ -1023,7 +1054,7 @@ export function RouteDetails({
         onSaved={() => loadClientesRota(Number(route.id))}
       />
 
-      {/* Sheet de Desativação de Cliente (R5) */}
+      {/* Sheet de Desativa├º├úo de Cliente (R5) */}
       <ClienteDesativarSheet
         open={desativarSheetOpen}
         onOpenChange={setDesativarSheetOpen}
